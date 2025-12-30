@@ -77,7 +77,7 @@ def extract_metadata_from_markdown(filepath):
 
 def generate_manifest():
     """Scan content directory and generate blog-manifest.json"""
-    content_dir = Path(__file__).parent / 'content'
+    content_dir = Path(__file__).parent / 'blog' / 'content'
 
     if not content_dir.exists():
         print(f"Error: Content directory not found: {content_dir}")

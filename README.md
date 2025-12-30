@@ -27,15 +27,18 @@ Then open http://localhost:8000 in your browser.
 
 ### Structure
 
-- `content/` - Contains all blog post markdown files
-- `content/blog-manifest.json` - Auto-generated index of all blog posts
-- `blog.html` - Individual blog post viewer
-- `blog-index.html` - List of all blog posts
-- `generate-blog-manifest.py` - Script to generate the blog manifest
+- `blog/` - Main blog directory
+  - `content/` - Contains all blog post markdown files
+  - `content/blog-manifest.json` - Auto-generated index of all blog posts
+  - `blog.html` - Individual blog post viewer
+  - `blog-index.html` - List of all blog posts
+  - `blog.js` - Blog post loading logic
+  - `blog-index.js` - Blog index loading logic
+- `generate-blog-manifest.py` - Script to generate the blog manifest (root level)
 
 ### Adding a New Blog Post
 
-1. Create a new markdown file in the `content/` directory (e.g., `content/my-new-post.md`)
+1. Create a new markdown file in the `blog/content/` directory (e.g., `blog/content/my-new-post.md`)
 
 2. Format your post with metadata at the top:
 
@@ -58,29 +61,30 @@ python3 generate-blog-manifest.py
 ```
 
 4. The new post will automatically appear on:
-   - `blog-index.html` (all posts page)
+   - `blog/blog-index.html` (all posts page)
    - Your homepage if you manually add it to `index.html`
 
 ### Viewing Blog Posts
 
-- **All posts:** http://localhost:8000/blog-index.html
-- **Individual post:** http://localhost:8000/blog.html?post=your-post-filename
+- **All posts:** http://localhost:8000/blog/blog-index.html
+- **Individual post:** http://localhost:8000/blog/blog.html?post=your-post-filename
 
 ## File Structure
 
 ```
 website/
 ├── index.html              # Homepage
-├── blog.html               # Blog post viewer
-├── blog-index.html         # All blog posts listing
 ├── style.css               # Main stylesheet
 ├── script.js               # Matrix effect and animations
-├── blog.js                 # Blog post loading logic
-├── blog-index.js           # Blog index loading logic
 ├── generate-blog-manifest.py  # Manifest generator script
-├── content/
-│   ├── blog-manifest.json  # Auto-generated blog index
-│   └── *.md                # Blog post markdown files
+├── blog/
+│   ├── blog.html           # Blog post viewer
+│   ├── blog-index.html     # All blog posts listing
+│   ├── blog.js             # Blog post loading logic
+│   ├── blog-index.js       # Blog index loading logic
+│   └── content/
+│       ├── blog-manifest.json  # Auto-generated blog index
+│       └── *.md            # Blog post markdown files
 └── README.md
 ```
 
@@ -101,7 +105,7 @@ For static hosting (GitHub Pages, Netlify, etc.):
    python3 generate-blog-manifest.py
    ```
 
-2. Commit all files including `content/blog-manifest.json`
+2. Commit all files including `blog/content/blog-manifest.json`
 
 3. Deploy the entire directory to your hosting service
 

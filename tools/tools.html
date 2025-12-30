@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Tools - Pinkhuff Security Research</title>
+    <meta name="description" content="Interactive security tools including terminal emulator, PGP encryption, and security headers checker.">
+    <meta name="keywords" content="security tools, PGP encryption, security headers, terminal emulator">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://pinkhuff.com/tools/">
+    <meta property="og:title" content="Interactive Security Tools - Pinkhuff">
+    <meta property="og:description" content="Try our interactive security tools: terminal emulator, PGP encryption, and security headers checker.">
+    <meta property="og:image" content="https://pinkhuff.com/og-image.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://pinkhuff.com/tools/">
+    <meta property="twitter:title" content="Interactive Security Tools - Pinkhuff">
+    <meta property="twitter:description" content="Try our interactive security tools: terminal emulator, PGP encryption, and security headers checker.">
+    <meta property="twitter:image" content="https://pinkhuff.com/og-image.png">
+    <meta name="twitter:site" content="@pinkhuff">
+
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <canvas id="matrix-bg"></canvas>
+
+    <div class="container">
+        <!-- Navigation Bar -->
+        <nav class="nav-bar">
+            <a href="../index.html" class="nav-link">[ HOME ]</a>
+            <a href="../blog/blog-index.html" class="nav-link">[ BLOG ]</a>
+            <a href="tools.html" class="nav-link active">[ TOOLS ]</a>
+        </nav>
+
+        <header>
+            <div class="ascii-art">
+ ____  _       _     _            __  __
+|  _ \(_)_ __ | | __| |__  _   _ / _|/ _|
+| |_) | | '_ \| |/ /| '_ \| | | | |_| |_
+|  __/| | | | |   < | | | | |_| |  _|  _|
+|_|   |_|_| |_|_|\_\|_| |_|\__,_|_| |_|
+            </div>
+            <p class="tagline">[ INTERACTIVE SECURITY TOOLS ]</p>
+            <p class="terminal-prompt">SYSTEM STATUS: ONLINE<span class="blink">_</span></p>
+        </header>
+
+        <section>
+            <h2><span class="terminal-header" data-text="// Interactive Tools"></span></h2>
+            <p class="terminal-prompt">SECURITY UTILITIES:</p>
+
+            <!-- Interactive Terminal -->
+            <div class="tool-panel">
+                <h3>[01] Interactive Terminal</h3>
+                <p>Try our command-line interface. Type <code>help</code> to get started.</p>
+                <div id="interactive-terminal" class="terminal-widget">
+                    <div class="terminal-output"></div>
+                    <div class="terminal-input-line">
+                        <span class="terminal-prompt-text">~ $</span>
+                        <input type="text" class="terminal-input" autocomplete="off" spellcheck="false" placeholder="Type 'help' and press Enter...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- PGP Encryption Tool -->
+            <div class="tool-panel">
+                <h3>[02] PGP Message Encryption</h3>
+                <p>Send us encrypted messages using our PGP public key.</p>
+                <div id="pgp-encryption-tool">
+                    <textarea id="pgp-message" placeholder="> Enter your message here..." rows="4"></textarea>
+                    <button id="encrypt-btn" class="tool-btn">[ ENCRYPT MESSAGE ]</button>
+                    <div id="encryption-status" class="encryption-status"></div>
+                    <textarea id="encrypted-output" readonly rows="8" style="display:none;"></textarea>
+                    <button id="copy-encrypted-btn" class="tool-btn" style="display:none;">[ COPY ENCRYPTED MESSAGE ]</button>
+                </div>
+            </div>
+
+            <!-- Security Headers Checker -->
+            <div class="tool-panel">
+                <h3>[03] Security Headers Checker</h3>
+                <p>Analyze HTTP security headers for any website.</p>
+                <div id="security-headers-checker">
+                    <div class="input-group">
+                        <input type="text" id="check-url" placeholder="> Enter URL (e.g., example.com)" autocomplete="off">
+                        <button id="check-btn" class="tool-btn">[ SCAN HEADERS ]</button>
+                    </div>
+                    <div id="security-results"></div>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p class="terminal-prompt">SYSTEM INFORMATION:</p>
+            <p>&copy; 2025 Pinkhuff<span class="blink">.</span> All rights reserved<span class="blink">.</span></p>
+            <p>Stay vigilant<span class="blink">.</span> Stay secure<span class="blink">.</span></p>
+        </footer>
+    </div>
+
+    <!-- Load OpenPGP.js for encryption tool -->
+    <script src="https://unpkg.com/openpgp@5.11.0/dist/openpgp.min.js"></script>
+
+    <!-- Load main scripts -->
+    <script src="../script.js"></script>
+    <script src="terminal.js"></script>
+    <script src="pgp-tool.js"></script>
+    <script src="security-checker.js"></script>
+</body>
+</html>

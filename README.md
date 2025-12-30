@@ -96,18 +96,47 @@ website/
 - [marked.js](https://marked.js.org/) - Markdown parser (loaded via CDN)
 - Python 3 - For manifest generation
 
+## SEO & Branding
+
+The site includes:
+- **Favicon**: Terminal-themed SVG icon (`favicon.svg`)
+- **Open Graph tags**: Optimized for Facebook/LinkedIn sharing
+- **Twitter Card tags**: Enhanced Twitter previews
+- **Sitemap**: Auto-generated `sitemap.xml` for search engines
+- **Robots.txt**: Search engine crawler configuration
+
+### Generating Sitemap
+
+Run this before deploying to update the sitemap with latest blog posts:
+
+```bash
+python3 generate-sitemap.py
+```
+
+This will create/update `sitemap.xml` with:
+- Homepage
+- Blog index
+- All individual blog posts
+
 ## Deployment
 
 For static hosting (GitHub Pages, Netlify, etc.):
 
-1. Generate the blog manifest before deploying:
+1. Generate the blog manifest and sitemap:
    ```bash
    python3 generate-blog-manifest.py
+   python3 generate-sitemap.py
    ```
 
-2. Commit all files including `blog/content/blog-manifest.json`
+2. Update the base URL in `generate-sitemap.py` to your actual domain
 
-3. Deploy the entire directory to your hosting service
+3. Commit all files including:
+   - `blog/content/blog-manifest.json`
+   - `sitemap.xml`
+
+4. Deploy the entire directory to your hosting service
+
+5. Submit `sitemap.xml` to Google Search Console for better indexing
 
 ## License
 

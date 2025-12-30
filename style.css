@@ -276,9 +276,69 @@ a:hover {
 
 .copy-btn:hover {
     background-color: rgba(0, 255, 0, 0.2);
-    box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
 }
 
-.copy-btn:active {
-    transform: scale(0.95);
+.blog-post {
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(0, 255, 0, 0.3);
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.blog-post:hover {
+    border-color: #00ff00;
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+}
+
+.blog-post-title {
+    font-size: 1.4em;
+    color: #00ff00;
+    margin-bottom: 10px;
+}
+
+.blog-post-meta {
+    font-size: 0.9em;
+    color: #00cc00;
+    margin-bottom: 10px;
+}
+
+.blog-post-category {
+    font-size: 0.85em;
+    color: #00aa00;
+    margin-bottom: 15px;
+    font-style: italic;
+}
+
+.blog-post-excerpt {
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+.read-more {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: rgba(0, 255, 0, 0.1);
+    border: 1px solid #00ff00;
+    color: #00ff00;
+    text-decoration: none;
+    border-bottom: 1px solid #00ff00;
+    transition: all 0.3s ease;
+}
+
+.read-more:hover {
+    background-color: rgba(0, 255, 0, 0.2);
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+}
+
+.error-message {
+    padding: 30px;
+    text-align: center;
+}
+
+.error-message h2 {
+    color: #ff0000;
+    margin-bottom: 20px;
 }

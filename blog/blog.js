@@ -10,6 +10,16 @@ function getBlogPostFromURL() {
 async function loadBlogPost(filename) {
     const articleContainer = document.getElementById('article-container');
 
+    // Escape HTML special characters to safely render text inside innerHTML
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     try {
         // Fetch the markdown file
         const response = await fetch(`content/${filename}.md`);
@@ -34,11 +44,12 @@ async function loadBlogPost(filename) {
 
     } catch (error) {
         console.error('Error loading blog post:', error);
+        const safeErrorMessage = escapeHtml(error && error.message ? error.message : '');
         articleContainer.innerHTML = `
             <div class="error-message">
                 <h2>[ ERROR: BLOG POST NOT FOUND ]</h2>
                 <p>The requested article could not be loaded.</p>
-                <p>Error: ${error.message}</p>
+                <p>Error: ${safeErrorMessage}</p>
                 <p><a href="index.html">Return to homepage</a></p>
             </div>
         `;

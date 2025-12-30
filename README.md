@@ -55,4 +55,4 @@ Simply open `index.html` in your browser. No build process required!
 
 ## 📝 License
 
-See LICENSE file for details.
+Apache License 2.0 - See LICENSE file for full details.

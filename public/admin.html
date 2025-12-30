@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Pinkhuff</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/blog.css">
+</head>
+<body>
+    <canvas id="matrix-bg"></canvas>
+
+    <div class="container">
+        <header>
+            <div class="ascii-art">
+ ____  _       _     _            __  __
+|  _ \(_)_ __ | | __| |__  _   _ / _|/ _|
+| |_) | | '_ \| |/ /| '_ \| | | | |_| |_
+|  __/| | | | |   < | | | | |_| |  _|  _|
+|_|   |_|_| |_|_|\_\|_| |_|\__,_|_| |_|
+            </div>
+            <p class="tagline">[ ADMIN CONTROL PANEL ]</p>
+            <nav class="main-nav">
+                <a href="index.html" class="nav-link">> HOME</a>
+                <a href="blog.html" class="nav-link">> BLOG</a>
+                <a href="admin.html" class="nav-link active">> ADMIN</a>
+                <button id="logout-btn" class="nav-link logout-btn">> LOGOUT</button>
+            </nav>
+            <p class="terminal-prompt">ACCESS GRANTED<span class="blink">_</span></p>
+        </header>
+
+        <section>
+            <h2><span class="terminal-header" data-text="// Upload New Post"></span></h2>
+            <p class="terminal-prompt">SELECT MARKDOWN FILE:</p>
+
+            <div class="upload-container">
+                <form id="upload-form" class="upload-form">
+                    <div class="form-group">
+                        <label for="markdown-file" class="terminal-prompt">> MARKDOWN FILE (.md):</label>
+                        <div class="file-input-wrapper">
+                            <input
+                                type="file"
+                                id="markdown-file"
+                                name="markdown"
+                                accept=".md"
+                                required
+                                class="file-input"
+                            >
+                            <label for="markdown-file" class="file-label">
+                                <span id="file-name">No file selected</span>
+                                <span class="file-btn">[ BROWSE ]</span>
+                            </label>
+                        </div>
+                        <p class="help-text">Upload a .md file with frontmatter (max 5MB)</p>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="submit-btn" id="upload-btn">
+                            [ UPLOAD POST ]
+                        </button>
+                    </div>
+                </form>
+
+                <div id="upload-status" class="status-message" style="display: none;">
+                    <p class="terminal-prompt status-text"></p>
+                </div>
+
+                <div id="loading" class="loading" style="display: none;">
+                    <p class="terminal-prompt">UPLOADING<span class="blink">...</span></p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2><span class="terminal-header" data-text="// Manage Posts"></span></h2>
+            <p class="terminal-prompt">EXISTING POSTS:</p>
+
+            <div id="posts-loading" class="loading">
+                <p class="terminal-prompt">LOADING POSTS<span class="blink">...</span></p>
+            </div>
+
+            <div id="posts-list" class="admin-posts-list">
+                <!-- Posts will be loaded here -->
+            </div>
+        </section>
+
+        <section>
+            <h2><span class="terminal-header" data-text="// Markdown Template"></span></h2>
+            <p class="terminal-prompt">EXAMPLE POST FORMAT:</p>
+
+            <div class="template-container">
+                <pre class="code-block">---
+title: "Your Post Title Here"
+date: 2025-12-30
+author: Pinkhuff
+tags: ["security", "research", "vulnerability"]
+excerpt: "A brief description of your post for the listing page"
+published: true
+---
+
+# Your Post Title
+
+Your content goes here. Use standard markdown formatting:
+
+## Subheading
+
+- Bullet points
+- More bullets
+
+### Code Examples
+
+```javascript
+function example() {
+    console.log("Code blocks are supported");
+}
+```
+
+**Bold text** and *italic text* work as expected.
+
+[Links work too](https://example.com)
+</pre>
+                <button class="copy-btn" onclick="copyTemplate()">[ COPY TEMPLATE ]</button>
+            </div>
+        </section>
+
+        <footer>
+            <p class="terminal-prompt">SYSTEM INFORMATION:</p>
+            <p>&copy; 2025 Pinkhuff<span class="blink">.</span> All rights reserved<span class="blink">.</span></p>
+            <p>Stay vigilant<span class="blink">.</span> Stay secure<span class="blink">.</span></p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

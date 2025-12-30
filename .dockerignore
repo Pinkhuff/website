@@ -1,0 +1,52 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+IMPLEMENTATION_PLAN.md
+*.md
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# Node
+node_modules
+npm-debug.log
+yarn-error.log
+.npm
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Database (will be in volume)
+*.db
+*.sqlite
+
+# Temporary files
+tmp
+temp
+*.tmp
+
+# Cloudflare
+cloudflare-tunnel-config.yml

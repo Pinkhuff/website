@@ -1,0 +1,58 @@
+# Cloudflare Tunnel Configuration Example
+# Copy this file to cloudflare-tunnel-config.yml and configure with your values
+
+tunnel: YOUR_TUNNEL_ID_HERE
+credentials-file: /path/to/YOUR_TUNNEL_ID.json
+
+ingress:
+  # Route your domain to the nginx container
+  - hostname: pinkhuff.com
+    service: http://nginx:80
+
+  # Route blog subdomain (optional)
+  - hostname: blog.pinkhuff.com
+    service: http://nginx:80
+
+  # Direct API access (optional - usually proxied through nginx)
+  # - hostname: api.pinkhuff.com
+  #   service: http://api:3000
+
+  # Catch-all rule (required as last rule)
+  - service: http_status:404
+
+# Optional: No-TLS verification (not recommended for production)
+# no-tls-verify: true
+
+# Optional: Logging
+# loglevel: info
+
+# SETUP INSTRUCTIONS:
+#
+# 1. Install cloudflared:
+#    - macOS: brew install cloudflare/cloudflare/cloudflared
+#    - Linux: wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+#             sudo dpkg -i cloudflared-linux-amd64.deb
+#    - Windows: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation/
+#
+# 2. Authenticate with Cloudflare:
+#    cloudflared tunnel login
+#
+# 3. Create a tunnel:
+#    cloudflared tunnel create pinkhuff
+#    (Note the tunnel ID that's returned)
+#
+# 4. Configure DNS:
+#    cloudflared tunnel route dns YOUR_TUNNEL_ID pinkhuff.com
+#    cloudflared tunnel route dns YOUR_TUNNEL_ID blog.pinkhuff.com
+#
+# 5. Copy this example config:
+#    cp cloudflare-tunnel-config.yml.example cloudflare-tunnel-config.yml
+#
+# 6. Update cloudflare-tunnel-config.yml with your tunnel ID and credentials path
+#
+# 7. Run the tunnel:
+#    cloudflared tunnel --config cloudflare-tunnel-config.yml run
+#
+# 8. Or use Docker (uncomment cloudflared service in docker-compose.yml):
+#    - Set TUNNEL_TOKEN environment variable
+#    - docker-compose up -d

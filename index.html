@@ -257,9 +257,9 @@
 
         const matrix = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()_+-=[]{}|;:,.<>?/";
         const fontSize = 14;
-        const columns = canvas.width / fontSize;
+        let columns = Math.floor(canvas.width / fontSize);
 
-        const drops = [];
+        let drops = [];
         for (let i = 0; i < columns; i++) {
             drops[i] = Math.random() * canvas.height / fontSize;
         }
@@ -288,6 +288,11 @@
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            columns = Math.floor(canvas.width / fontSize);
+            drops = [];
+            for (let i = 0; i < columns; i++) {
+                drops[i] = Math.random() * canvas.height / fontSize;
+            }
         });
     </script>
 </body>

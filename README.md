@@ -1,1 +1,110 @@
-# website
+# Pinkhuff Security Research Website
+
+A terminal/hacker-themed security research company website with blog functionality.
+
+## Features
+
+- Matrix-style animated background
+- Terminal/hacker aesthetic with typing effects
+- Blog system with markdown support
+- PGP public key integration
+- Fully responsive design
+
+## Local Development
+
+To run the website locally:
+
+```bash
+# Start a local web server
+python3 -m http.server 8000
+```
+
+Then open http://localhost:8000 in your browser.
+
+**Note:** A local web server is required because the blog system uses `fetch()` to load markdown files, which doesn't work with the `file://` protocol due to CORS restrictions.
+
+## Blog System
+
+### Structure
+
+- `content/` - Contains all blog post markdown files
+- `content/blog-manifest.json` - Auto-generated index of all blog posts
+- `blog.html` - Individual blog post viewer
+- `blog-index.html` - List of all blog posts
+- `generate-blog-manifest.py` - Script to generate the blog manifest
+
+### Adding a New Blog Post
+
+1. Create a new markdown file in the `content/` directory (e.g., `content/my-new-post.md`)
+
+2. Format your post with metadata at the top:
+
+```markdown
+# Your Post Title
+
+**Published:** December 30, 2025
+**Author:** Pinkhuff Team
+**Category:** Your Category
+
+## Overview
+
+Your content here...
+```
+
+3. Run the manifest generator:
+
+```bash
+python3 generate-blog-manifest.py
+```
+
+4. The new post will automatically appear on:
+   - `blog-index.html` (all posts page)
+   - Your homepage if you manually add it to `index.html`
+
+### Viewing Blog Posts
+
+- **All posts:** http://localhost:8000/blog-index.html
+- **Individual post:** http://localhost:8000/blog.html?post=your-post-filename
+
+## File Structure
+
+```
+website/
+├── index.html              # Homepage
+├── blog.html               # Blog post viewer
+├── blog-index.html         # All blog posts listing
+├── style.css               # Main stylesheet
+├── script.js               # Matrix effect and animations
+├── blog.js                 # Blog post loading logic
+├── blog-index.js           # Blog index loading logic
+├── generate-blog-manifest.py  # Manifest generator script
+├── content/
+│   ├── blog-manifest.json  # Auto-generated blog index
+│   └── *.md                # Blog post markdown files
+└── README.md
+```
+
+## Technologies
+
+- HTML5
+- CSS3 (with animations)
+- Vanilla JavaScript
+- [marked.js](https://marked.js.org/) - Markdown parser (loaded via CDN)
+- Python 3 - For manifest generation
+
+## Deployment
+
+For static hosting (GitHub Pages, Netlify, etc.):
+
+1. Generate the blog manifest before deploying:
+   ```bash
+   python3 generate-blog-manifest.py
+   ```
+
+2. Commit all files including `content/blog-manifest.json`
+
+3. Deploy the entire directory to your hosting service
+
+## License
+
+See LICENSE file for details.

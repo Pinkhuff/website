@@ -4,7 +4,7 @@
     "title": "Introduction to Embedded Security",
     "date": "December 30, 2025",
     "author": "Pinkhuff Team",
-    "excerpt": "Embedded systems are everywhere - from smart thermostats to vehicle control units, from medical devices to industrial control systems. This comprehensive introduction explores the unique security challenges of embedded systems, common threat vectors, and essential security principles for protecting these critical devices.",
+    "excerpt": "Embedded systems are everywhere - from the smart thermostat controlling your home's temperature to the engine control unit in your vehicle, from medical devices monitoring vital signs to industrial control systems managing critical infrastructure. As these devices become increasingly connected an...",
     "category": "Embedded Systems, IoT Security"
   }
 ]

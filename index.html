@@ -187,6 +187,28 @@
             font-family: 'Courier New', monospace;
         }
 
+        .pgp-fingerprint {
+            padding: 20px 20px 10px 20px;
+            font-size: 0.95em;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            border-bottom: 1px solid rgba(0, 255, 0, 0.3);
+        }
+
+        .pgp-fingerprint code {
+            display: inline-block;
+            margin-top: 6px;
+            color: #00dd00;
+            letter-spacing: 1.5px;
+            word-break: break-all;
+        }
+
+        .pgp-meta {
+            margin-top: 6px;
+            font-size: 0.85em;
+            color: #00cc00;
+        }
+
         .pgp-panel {
             margin-top: 20px;
             border: 1px solid #00ff00;
@@ -352,7 +374,17 @@
                     <span>> PGP PUBLIC KEY</span>
                     <span class="pgp-arrow" id="pgp-arrow">▶</span>
                 </div>
+
                 <div class="pgp-content" id="pgp-content">
+
+                    <div class="pgp-fingerprint">
+                        <strong>PGP Fingerprint:</strong><br>
+                        <code>9213 6731 A856 4BF1 F0DE  8D86 F450 66BE 5BE2 14A8</code>
+                        <div class="pgp-meta">
+                            Key type: ed25519 · Created: 2025-12-30
+                        </div>
+                    </div>
+
                     <pre class="pgp-key" id="pgp-key">-----BEGIN PGP PUBLIC KEY BLOCK-----
 xjMEaVPtNRYJKwYBBAHaRw8BAQdAp89agfx6+GjHy+XMOaZeqIeqIkbSfXvB
 jd487L3uNObNLXNlY3VyaXR5QHBpbmtodWZmLmNvbSA8c2VjdXJpdHlAcGlu

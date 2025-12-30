@@ -1,0 +1,12 @@
+# Redirects for Cloudflare Pages
+
+# Redirect common paths to index.html (SPA fallback)
+# This ensures that any URL path will serve the index.html file
+# Uncomment the line below if you want SPA-like routing
+# /* /index.html 200
+
+# Example: Redirect www to non-www (if needed)
+# https://www.pinkhuff.com/* https://pinkhuff.com/:splat 301
+
+# Example: Force HTTPS (Cloudflare handles this automatically, but you can enforce it here)
+# http://pinkhuff.com/* https://pinkhuff.com/:splat 301

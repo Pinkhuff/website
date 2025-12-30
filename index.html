@@ -186,6 +186,82 @@
             white-space: pre;
             font-family: 'Courier New', monospace;
         }
+
+        .pgp-panel {
+            margin-top: 20px;
+            border: 1px solid #00ff00;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .pgp-header {
+            background-color: rgba(0, 255, 0, 0.1);
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pgp-header:hover {
+            background-color: rgba(0, 255, 0, 0.2);
+        }
+
+        .pgp-header span {
+            font-weight: bold;
+        }
+
+        .pgp-arrow {
+            transition: transform 0.3s ease;
+            font-size: 1.2em;
+        }
+
+        .pgp-arrow.open {
+            transform: rotate(90deg);
+        }
+
+        .pgp-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .pgp-content.open {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .pgp-key {
+            padding: 20px;
+            font-size: 0.9em;
+            line-height: 1.4;
+            color: #00dd00;
+            white-space: pre-wrap;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+        }
+
+        .copy-btn {
+            background-color: rgba(0, 255, 0, 0.1);
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            padding: 8px 16px;
+            margin: 0 20px 20px 20px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background-color: rgba(0, 255, 0, 0.2);
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
     </style>
 </head>
 <body>
@@ -268,9 +344,34 @@
             </p>
             <p>
                 Email: <a href="mailto:security@pinkhuff.com">security@pinkhuff.com</a><br>
-                PGP Key: Available upon request<br>
                 Twitter: <a href="https://twitter.com/pinkhuff" target="_blank" rel="noopener noreferrer">@pinkhuff</a>
             </p>
+            
+            <div class="pgp-panel">
+                <div class="pgp-header" onclick="togglePGP()">
+                    <span>> PGP PUBLIC KEY</span>
+                    <span class="pgp-arrow" id="pgp-arrow">▶</span>
+                </div>
+                <div class="pgp-content" id="pgp-content">
+                    <pre class="pgp-key" id="pgp-key">-----BEGIN PGP PUBLIC KEY BLOCK-----
+xjMEaVPtNRYJKwYBBAHaRw8BAQdAp89agfx6+GjHy+XMOaZeqIeqIkbSfXvB
+jd487L3uNObNLXNlY3VyaXR5QHBpbmtodWZmLmNvbSA8c2VjdXJpdHlAcGlu
+a2h1ZmYuY29tPsLAEQQTFgoAgwWCaVPtNQMLCQcJEPRQZr5b4hSoRRQAAAAA
+ABwAIHNhbHRAbm90YXRpb25zLm9wZW5wZ3Bqcy5vcmcmxzGTeDhltxE7q25k
+coKcUkS3HmqqEmMTMZl7ORUM3QMVCggEFgACAQIZAQKbAwIeARYhBJITZzGo
+Vkvx8N6NhvRQZr5b4hSoAADXkQEAw/YcksjB9PGBFGv0epQaKuNop9mH+uaN
+yxBLw0GiodMBAPfC/STrFPVqro4nyhbv9ror3o97i7sNhKFcmRPKLjAGzjgE
+aVPtNRIKKwYBBAGXVQEFAQEHQO2IIec3HKBkd9wH0/3vpJTg/MWMafp4GQo0
+c/CH4qp/AwEIB8K+BBgWCgBwBYJpU+01CRD0UGa+W+IUqEUUAAAAAAAcACBz
+YWx0QG5vdGF0aW9ucy5vcGVucGdwanMub3Jn3EV5uq4u+mTlRk1NJi4N8t48
+UirDUnP6i7XKidkHT+ECmwwWIQSSE2cxqFZL8fDejYb0UGa+W+IUqAAAzlQB
+AJaPtTs5zuptUVOKsiwwNXruzw8XlY63JEFbfZiTcjQoAQCkj15fjPHGcb3U
+KSG0TNMUZ9aKCjxYW3cRMAOyFDuVBA==
+=3CY5
+-----END PGP PUBLIC KEY BLOCK-----</pre>
+                    <button class="copy-btn" onclick="copyPGPKey()">[ COPY TO CLIPBOARD ]</button>
+                </div>
+            </div>
         </section>
 
         <footer>
@@ -374,6 +475,33 @@
 
         // Start typing effects when page loads
         document.addEventListener('DOMContentLoaded', initializeTypingEffects);
+
+        // PGP Panel Toggle
+        function togglePGP() {
+            const content = document.getElementById('pgp-content');
+            const arrow = document.getElementById('pgp-arrow');
+            
+            content.classList.toggle('open');
+            arrow.classList.toggle('open');
+        }
+
+        // Copy PGP Key to Clipboard
+        function copyPGPKey() {
+            const keyText = document.getElementById('pgp-key').textContent;
+            
+            navigator.clipboard.writeText(keyText).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '[ COPIED! ]';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy key. Please select and copy manually.');
+            });
+        }
     </script>
 </body>
 </html>

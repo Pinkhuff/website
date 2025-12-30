@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="post-title">Post - Pinkhuff</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/blog.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css">
+</head>
+<body>
+    <canvas id="matrix-bg"></canvas>
+
+    <div class="container">
+        <header>
+            <div class="ascii-art">
+ ____  _       _     _            __  __
+|  _ \(_)_ __ | | __| |__  _   _ / _|/ _|
+| |_) | | '_ \| |/ /| '_ \| | | | |_| |_
+|  __/| | | | |   < | | | | |_| |  _|  _|
+|_|   |_|_| |_|_|\_\|_| |_|\__,_|_| |_|
+            </div>
+            <p class="tagline">[ SECURITY RESEARCH BLOG ]</p>
+            <nav class="main-nav">
+                <a href="index.html" class="nav-link">> HOME</a>
+                <a href="blog.html" class="nav-link">> BLOG</a>
+                <a href="admin-login.html" class="nav-link admin-link">> ADMIN</a>
+            </nav>
+            <p class="terminal-prompt">SYSTEM STATUS: ONLINE<span class="blink">_</span></p>
+        </header>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading">
+            <p class="terminal-prompt">LOADING POST<span class="blink">...</span></p>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error" class="error-message" style="display: none;">
+            <p class="terminal-prompt error-text"></p>
+            <a href="blog.html" class="back-link">[ BACK TO BLOG ]</a>
+        </div>
+
+        <!-- Blog Post Content -->
+        <article id="post-content" class="blog-post" style="display: none;">
+            <div class="post-header">
+                <h1 id="post-title-main" class="post-title"></h1>
+                <div class="post-meta">
+                    <span class="meta-item">> Author: <span id="post-author"></span></span>
+                    <span class="meta-item">> Date: <span id="post-date"></span></span>
+                    <span class="meta-item">> Views: <span id="post-views"></span></span>
+                </div>
+                <div id="post-tags" class="post-tags">
+                    <!-- Tags will be loaded here -->
+                </div>
+            </div>
+
+            <div class="post-body" id="post-body">
+                <!-- Post content will be loaded here -->
+            </div>
+
+            <div class="post-footer">
+                <a href="blog.html" class="back-link">[ BACK TO BLOG ]</a>
+            </div>
+        </article>
+
+        <footer>
+            <p class="terminal-prompt">SYSTEM INFORMATION:</p>
+            <p>&copy; 2025 Pinkhuff<span class="blink">.</span> All rights reserved<span class="blink">.</span></p>
+            <p>Stay vigilant<span class="blink">.</span> Stay secure<span class="blink">.</span></p>
+        </footer>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="script.js"></script>
+    <script src="js/blog.js"></script>
+</body>
+</html>

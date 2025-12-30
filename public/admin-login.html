@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Pinkhuff</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/blog.css">
+</head>
+<body>
+    <canvas id="matrix-bg"></canvas>
+
+    <div class="container">
+        <header>
+            <div class="ascii-art">
+ ____  _       _     _            __  __
+|  _ \(_)_ __ | | __| |__  _   _ / _|/ _|
+| |_) | | '_ \| |/ /| '_ \| | | | |_| |_
+|  __/| | | | |   < | | | | |_| |  _|  _|
+|_|   |_|_| |_|_|\_\|_| |_|\__,_|_| |_|
+            </div>
+            <p class="tagline">[ ADMIN ACCESS ]</p>
+            <nav class="main-nav">
+                <a href="index.html" class="nav-link">> HOME</a>
+                <a href="blog.html" class="nav-link">> BLOG</a>
+                <a href="admin-login.html" class="nav-link active">> ADMIN</a>
+            </nav>
+            <p class="terminal-prompt">AUTHENTICATION REQUIRED<span class="blink">_</span></p>
+        </header>
+
+        <section>
+            <h2><span class="terminal-header" data-text="// Admin Login"></span></h2>
+            <p class="terminal-prompt">ENTER CREDENTIALS:</p>
+
+            <div class="login-container">
+                <form id="login-form" class="login-form">
+                    <div class="form-group">
+                        <label for="password" class="terminal-prompt">> PASSWORD:</label>
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            class="form-input"
+                            placeholder="Enter admin password"
+                            required
+                            autocomplete="current-password"
+                        >
+                    </div>
+
+                    <div id="error-message" class="error-message" style="display: none;">
+                        <p class="terminal-prompt error-text"></p>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="login-btn">
+                        [ AUTHENTICATE ]
+                    </button>
+                </form>
+
+                <div id="loading" class="loading" style="display: none;">
+                    <p class="terminal-prompt">AUTHENTICATING<span class="blink">...</span></p>
+                </div>
+            </div>
+
+            <div class="security-notice">
+                <p class="terminal-prompt">SECURITY NOTICE:</p>
+                <p>This is a restricted area. All access attempts are logged and monitored.</p>
+            </div>
+        </section>
+
+        <footer>
+            <p class="terminal-prompt">SYSTEM INFORMATION:</p>
+            <p>&copy; 2025 Pinkhuff<span class="blink">.</span> All rights reserved<span class="blink">.</span></p>
+            <p>Stay vigilant<span class="blink">.</span> Stay secure<span class="blink">.</span></p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

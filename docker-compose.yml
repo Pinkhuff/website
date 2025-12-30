@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # Nginx - Frontend static file server
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    container_name: pinkhuff-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+    networks:
+      - pinkhuff-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # Node.js API - Blog backend
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: pinkhuff-api
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - JWT_SECRET=${JWT_SECRET:-change-this-secret-in-production}
+      - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH}
+      - DATABASE_PATH=/app/database/blog.db
+      - MAX_FILE_SIZE=5242880
+      - ALLOWED_ORIGINS=http://localhost:8080,https://pinkhuff.com,https://blog.pinkhuff.com
+    volumes:
+      - blog-data:/app/database
+    networks:
+      - pinkhuff-network
+    restart: unless-stopped
+
+  # Cloudflare Tunnel (optional - uncomment when ready)
+  # cloudflared:
+  #   image: cloudflare/cloudflared:latest
+  #   container_name: pinkhuff-tunnel
+  #   command: tunnel --no-autoupdate run
+  #   environment:
+  #     - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+  #   depends_on:
+  #     - nginx
+  #   networks:
+  #     - pinkhuff-network
+  #   restart: unless-stopped
+
+networks:
+  pinkhuff-network:
+    driver: bridge
+
+volumes:
+  blog-data:
+    driver: local

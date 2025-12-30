@@ -1,0 +1,26 @@
+# Nginx Dockerfile for Pinkhuff Website
+FROM nginx:alpine
+
+# Copy custom nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Copy static website files
+COPY public /usr/share/nginx/html
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nginx-user && \
+    adduser -u 1001 -S nginx-user -G nginx-user && \
+    chown -R nginx-user:nginx-user /usr/share/nginx/html && \
+    chown -R nginx-user:nginx-user /var/cache/nginx && \
+    chown -R nginx-user:nginx-user /var/log/nginx && \
+    touch /var/run/nginx.pid && \
+    chown -R nginx-user:nginx-user /var/run/nginx.pid
+
+# Expose port 80
+EXPOSE 80
+
+# Switch to non-root user
+USER nginx-user
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]

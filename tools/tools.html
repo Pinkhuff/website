@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tools - Pinkhuff</title>
+    <meta name="description" content="Encoding and decoding tools - Base64, Hex, Binary, ASCII, and more.">
+
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="tools.css">
+</head>
+<body>
+    <canvas id="matrix-bg"></canvas>
+
+    <div class="container">
+        <header>
+            <div class="ascii-art">
+ ____  _       _     _            __  __
+|  _ \(_)_ __ | | __| |__  _   _ / _|/ _|
+| |_) | | '_ \| |/ /| '_ \| | | | |_| |_
+|  __/| | | | |   < | | | | |_| |  _|  _|
+|_|   |_|_| |_|_|\_\|_| |_|\__,_|_| |_|
+            </div>
+            <p class="tagline">[ SECURITY RESEARCH & ANALYSIS ]</p>
+            <p class="terminal-prompt">TOOLS MODULE LOADED<span class="blink">_</span></p>
+        </header>
+
+        <nav class="nav-bar">
+            <a href="../index.html" class="nav-link">[ HOME ]</a>
+            <a href="../blog/blog-index.html" class="nav-link">[ BLOG ]</a>
+            <a href="tools.html" class="nav-link active">[ TOOLS ]</a>
+        </nav>
+
+        <section>
+            <h2><span class="terminal-header" data-text="// Encoding & Decoding Tools"></span></h2>
+            <p class="terminal-prompt">CONVERSION UTILITIES</p>
+
+            <div class="tool-container">
+                <div class="input-section">
+                    <div class="input-header">
+                        <label for="input-text">> INPUT DATA:</label>
+                        <div class="input-controls">
+                            <select id="input-format" class="format-selector">
+                                <option value="text">Text/ASCII</option>
+                                <option value="hex">Hexadecimal</option>
+                                <option value="binary">Binary</option>
+                                <option value="decimal">Decimal</option>
+                            </select>
+                        </div>
+                    </div>
+                    <textarea id="input-text" class="tool-input" placeholder="Enter your data here..." rows="8"></textarea>
+                </div>
+
+                <div class="conversion-section">
+                    <button class="convert-btn" onclick="convertAll()">[ CONVERT ALL ]</button>
+                    <button class="clear-btn" onclick="clearAll()">[ CLEAR ]</button>
+                </div>
+
+                <div class="output-grid">
+                    <div class="output-box">
+                        <div class="output-header">
+                            <span>> TEXT / ASCII</span>
+                            <button class="copy-output-btn" onclick="copyOutput('output-text')">COPY</button>
+                        </div>
+                        <textarea id="output-text" class="tool-output" readonly rows="4"></textarea>
+                    </div>
+
+                    <div class="output-box">
+                        <div class="output-header">
+                            <span>> HEXADECIMAL</span>
+                            <button class="copy-output-btn" onclick="copyOutput('output-hex')">COPY</button>
+                        </div>
+                        <textarea id="output-hex" class="tool-output" readonly rows="4"></textarea>
+                    </div>
+
+                    <div class="output-box">
+                        <div class="output-header">
+                            <span>> BINARY</span>
+                            <button class="copy-output-btn" onclick="copyOutput('output-binary')">COPY</button>
+                        </div>
+                        <textarea id="output-binary" class="tool-output" readonly rows="4"></textarea>
+                    </div>
+
+                    <div class="output-box">
+                        <div class="output-header">
+                            <span>> DECIMAL (BYTE ARRAY)</span>
+                            <button class="copy-output-btn" onclick="copyOutput('output-decimal')">COPY</button>
+                        </div>
+                        <textarea id="output-decimal" class="tool-output" readonly rows="4"></textarea>
+                    </div>
+                </div>
+
+                <div class="status-bar">
+                    <span id="status-message" class="terminal-prompt"></span>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2><span class="terminal-header" data-text="// Hashing & Encoding Tools"></span></h2>
+            <p class="terminal-prompt">HASH FUNCTIONS & BASE64 ENCODING</p>
+
+            <div class="tool-container">
+                <div class="input-section">
+                    <div class="input-header">
+                        <label for="hash-input">> INPUT DATA:</label>
+                    </div>
+                    <textarea id="hash-input" class="tool-input" placeholder="Enter text to hash or encode..." rows="6" oninput="generateAllHashes()"></textarea>
+                </div>
+
+                <div class="output-grid">
+                    <div class="output-box">
+                        <div class="output-header">
+                            <span>> BASE64 ENCODED</span>
+                            <button class="copy-output-btn" onclick="copyOutput('output-base64')">COPY</button>
+                        </div>
+                        <textarea id="output-base64" class="tool-output" readonly rows="2"></textarea>
+                    </div>
+
+                    <div class="output-box">
+                        <div class="output-header">
+                            <span>> MD5 HASH</span>
+                            <button class="copy-output-btn" onclick="copyOutput('output-md5')">COPY</button>
+                        </div>
+                        <textarea id="output-md5" class="tool-output" readonly rows="2"></textarea>
+                    </div>
+
+                    <div class="output-box">
+                        <div class="output-header">
+                            <span>> SHA-256 HASH</span>
+                            <button class="copy-output-btn" onclick="copyOutput('output-sha256')">COPY</button>
+                        </div>
+                        <textarea id="output-sha256" class="tool-output" readonly rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2><span class="terminal-header" data-text="// IP Address Tools"></span></h2>
+            <p class="terminal-prompt">SUBNET CALCULATION & IP ANALYSIS</p>
+
+            <div class="tool-container">
+                <div class="input-section">
+                    <div class="input-header">
+                        <label for="ip-input">> IP ADDRESS / CIDR:</label>
+                    </div>
+                    <input type="text" id="ip-input" class="tool-input" placeholder="Enter IP address (e.g., 192.168.1.1 or 192.168.1.0/24)" oninput="analyzeIP()" style="padding: 12px; margin-bottom: 20px;">
+                </div>
+
+                <div class="ip-results">
+                    <div class="ip-section">
+                        <h4>> IP CLASSIFICATION</h4>
+                        <div class="char-stats">
+                            <p>IP Version: <span id="ip-version">-</span></p>
+                            <p>IP Class: <span id="ip-class">-</span></p>
+                            <p>Type: <span id="ip-type">-</span></p>
+                            <p>Is Private: <span id="ip-private">-</span></p>
+                            <p>Is Loopback: <span id="ip-loopback">-</span></p>
+                            <p>Is Multicast: <span id="ip-multicast">-</span></p>
+                        </div>
+                    </div>
+
+                    <div class="ip-section">
+                        <h4>> SUBNET INFORMATION</h4>
+                        <div class="char-stats">
+                            <p>Network Address: <span id="subnet-network">-</span></p>
+                            <p>Broadcast Address: <span id="subnet-broadcast">-</span></p>
+                            <p>Subnet Mask: <span id="subnet-mask">-</span></p>
+                            <p>Wildcard Mask: <span id="subnet-wildcard">-</span></p>
+                            <p>CIDR Notation: <span id="subnet-cidr">-</span></p>
+                            <p>Total Hosts: <span id="subnet-total-hosts">-</span></p>
+                            <p>Usable Hosts: <span id="subnet-usable-hosts">-</span></p>
+                            <p>First Usable IP: <span id="subnet-first-ip">-</span></p>
+                            <p>Last Usable IP: <span id="subnet-last-ip">-</span></p>
+                        </div>
+                    </div>
+
+                    <div class="ip-section">
+                        <h4>> BINARY REPRESENTATION</h4>
+                        <div class="char-stats">
+                            <p>IP Address (Binary): <span id="ip-binary" style="font-family: monospace; font-size: 0.9em;">-</span></p>
+                            <p>Subnet Mask (Binary): <span id="mask-binary" style="font-family: monospace; font-size: 0.9em;">-</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2><span class="terminal-header" data-text="// Additional Tools"></span></h2>
+
+            <div class="additional-tools">
+                <div class="tool-card linguistics-card">
+                    <h3>[01] Linguistics Analysis</h3>
+                    <textarea id="linguistics-input" class="tool-input" placeholder="Enter text for frequency analysis..." rows="4" oninput="analyzeLinguistics()"></textarea>
+
+                    <div class="linguistics-results">
+                        <div class="linguistics-section">
+                            <h4 class="collapsible-header" onclick="toggleSection('common-letters-content')">
+                                <span>> MOST COMMON LETTERS</span>
+                                <span class="collapse-arrow" id="common-letters-content-arrow">▼</span>
+                            </h4>
+                            <div id="common-letters-content" class="collapsible-content">
+                                <div id="common-letters" class="frequency-display"></div>
+                            </div>
+                        </div>
+
+                        <div class="linguistics-section">
+                            <h4 class="collapsible-header" onclick="toggleSection('letter-frequency-content')">
+                                <span>> LETTER FREQUENCY</span>
+                                <span class="collapse-arrow" id="letter-frequency-content-arrow">▼</span>
+                            </h4>
+                            <div id="letter-frequency-content" class="collapsible-content">
+                                <div id="letter-frequency" class="frequency-bars"></div>
+                            </div>
+                        </div>
+
+                        <div class="linguistics-section">
+                            <h4 class="collapsible-header" onclick="toggleSection('statistics-content')">
+                                <span>> STATISTICS</span>
+                                <span class="collapse-arrow" id="statistics-content-arrow">▼</span>
+                            </h4>
+                            <div id="statistics-content" class="collapsible-content">
+                                <div class="char-stats">
+                                <p>Total Characters: <span id="ling-char-count">0</span></p>
+                                <p>Letters Only: <span id="ling-letter-count">0</span></p>
+                                <p>Words: <span id="ling-word-count">0</span></p>
+                                <p>Lines: <span id="ling-line-count">0</span></p>
+                                <p>Bytes: <span id="ling-byte-count">0</span></p>
+                                <p>Vowels: <span id="ling-vowel-count">0</span></p>
+                                <p>Consonants: <span id="ling-consonant-count">0</span></p>
+                                <p>Digits: <span id="ling-digit-count">0</span></p>
+                                <p>Spaces: <span id="ling-space-count">0</span></p>
+                                <p>Special Characters: <span id="ling-special-count">0</span></p>
+                                <p>Unique Letters: <span id="ling-unique-count">0</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tool-card">
+                    <h3>[02] Reverse String</h3>
+                    <textarea id="reverse-input" class="tool-input" placeholder="Enter text to reverse..." rows="3"></textarea>
+                    <button class="convert-btn" onclick="reverseString()">[ REVERSE ]</button>
+                    <textarea id="reverse-output" class="tool-output" readonly rows="3"></textarea>
+                </div>
+
+                <div class="tool-card">
+                    <h3>[03] URL Encode / Decode</h3>
+                    <div class="input-controls" style="margin-bottom: 10px;">
+                        <select id="url-mode" class="format-selector">
+                            <option value="encode">Encode</option>
+                            <option value="decode">Decode</option>
+                        </select>
+                    </div>
+                    <textarea id="url-input" class="tool-input" placeholder="Enter text to URL encode/decode..." rows="3"></textarea>
+                    <button class="convert-btn" onclick="processURL()">[ PROCESS ]</button>
+                    <textarea id="url-output" class="tool-output" readonly rows="3"></textarea>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p class="terminal-prompt">SYSTEM INFORMATION:</p>
+            <p>&copy; 2025 Pinkhuff<span class="blink">.</span> All rights reserved<span class="blink">.</span></p>
+            <p>Stay vigilant<span class="blink">.</span> Stay secure<span class="blink">.</span></p>
+        </footer>
+    </div>
+
+    <script src="../script.js"></script>
+    <script src="tools.js"></script>
+</body>
+</html>

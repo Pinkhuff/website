@@ -48,11 +48,23 @@ ip link show
 - Ethernet to Pi: Usually `eth0`, `eth1`, or `enp0s25`
 
 **For this guide:**
-- `wlan0` = your internet interface
-- `eth1` = ethernet connected to Pi
+- `wlo1` = your internet interface
+- `enp3s0` = ethernet connected to Pi
 
 ### 1.4 Configure Static IP for Pi Connection
 
+- Check ethernet status
+```bash 
+nmcli connection show
+```
+- In my case the result was the below
+```bash
+~$   nmcli connection show
+NAME                UUID                                  TYPE      DEVICE
+Home_WiFi           aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee  wifi      wlo1
+lo                  11111111-2222-3333-4444-555555555555  loopback  lo
+Wired connection 1  66666666-7777-8888-9999-000000000000  ethernet  --
+```
 ```bash
 # Using NetworkManager (Ubuntu Desktop)
 sudo nmcli connection modify "Wired connection 1" \
@@ -94,6 +106,47 @@ ip addr show eth1 | grep "inet "
 # Check NAT rules
 sudo iptables -t nat -L -n -v | grep MASQUERADE
 ```
+- On my machine the result was below.
+```bash
+$ sudo iptables -t nat -L -n -v | grep MASQUERADE        
+   39  2448 MASQUERADE  0    --  *      wlo1    0.0.0.0/0            0.0.0.0/0   
+```
+- Now you need to get the IP adress. To start with we can see if the pi is broadcasting iitself. 
+```bash
+$ ip neigh show dev enp3s0
+```
+- In my case I need to install a dhcp server 
+```bash
+$ sudo apt install -y dnsmasq
+```
+- Next create a backup of the config
+```bash
+sudo cp /etc/dnsmasq.conf /etc/dnsmasq.conf.backup
+```
+- Edit the config
+```bash
+sudo nano /etc/dnsmasq.d/eth-dhcp.conf
+```
+- Insert the below config
+```
+port=0
+  interface=enp3s0
+  dhcp-range=192.168.100.50,192.168.100.150,12h
+  dhcp-option=3,192.168.100.1
+  dhcp-option=6,8.8.8.8,8.8.4.4
+```
+- Restart and check the status
+```bash
+sudo systemctl restart dnsmasq
+sudo systemctl status dnsmasq.service
+```
+- Now look at the logs for an ip address
+```bash
+$ sudo journalctl -u dnsmasq -f
+
+Dec 31 16:05:21 research dnsmasq-dhcp[72624]: DHCPACK(enp3s0) 192.168.100.134 xx:xx:xx:xx:xx:xx research-pi
+```
+- The hostname I set was "research-pi" so the ip is 192.168.100.134.
 
 ---
 
@@ -180,10 +233,28 @@ ping -c 3 8.8.8.8
 
 ### 2.6 Enable IP Forwarding on Pi
 
+**Critical:** IP forwarding allows the Pi to route traffic between wlan0 (WiFi clients) and eth0 (Ubuntu PC). Without this, WiFi clients won't have internet access.
+
 ```bash
+# Enable IP forwarding immediately
 sudo sysctl -w net.ipv4.ip_forward=1
-echo "net.ipv4.ip_forward=1" | sudo tee -a /etc/sysctl.conf
+
+# Make it persistent across reboots (systemd method - the proper way)
+echo "net.ipv4.ip_forward=1" | sudo tee /etc/sysctl.d/99-ip-forward.conf
+
+# Apply the configuration
+sudo sysctl -p /etc/sysctl.d/99-ip-forward.conf
+
+# Verify it's enabled
+sysctl net.ipv4.ip_forward
+# Should output: net.ipv4.ip_forward = 1
 ```
+
+**Why use `/etc/sysctl.d/` instead of `/etc/sysctl.conf`?**
+- Modern Raspberry Pi OS uses systemd and reads settings from `/etc/sysctl.d/`
+- Files in `/etc/sysctl.d/` override `/etc/sysctl.conf`
+- The `99-` prefix ensures this loads last, overriding any conflicting settings
+- This method is guaranteed to persist across reboots
 
 ---
 
@@ -200,6 +271,50 @@ sudo systemctl stop dnsmasq
 ```
 
 ### 3.2 Configure wlan0 Static IP
+
+**Note:** Different Raspberry Pi OS versions use different network managers. Check which one you have first.
+
+#### Check Network Manager
+
+```bash
+sudo systemctl status NetworkManager
+sudo systemctl status dhcpcd
+```
+
+#### Option A: If Using NetworkManager (most modern installs)
+
+Since NetworkManager may ignore `/etc/dhcpcd.conf`, create a systemd service to ensure wlan0 gets its static IP:
+
+```bash
+sudo nano /etc/systemd/system/wlan0-static-ip.service
+```
+
+**Add:**
+
+```ini
+[Unit]
+Description=Set static IP for wlan0
+After=network.target
+Before=hostapd.service dnsmasq.service
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/ip addr add 192.168.50.1/24 dev wlan0
+ExecStart=/sbin/ip link set wlan0 up
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Save and exit. Then enable it:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable wlan0-static-ip.service
+```
+
+#### Option B: If Using dhcpcd (older installs)
 
 Edit `/etc/dhcpcd.conf`:
 
@@ -255,10 +370,10 @@ sudo nano /etc/hostapd/hostapd.conf
 ```
 interface=wlan0
 driver=nl80211
-ssid=TapoResearchLab
+ssid=ResearchLab
 hw_mode=g
 channel=6
-country_code=US
+country_code=GB
 ieee80211n=1
 wmm_enabled=1
 macaddr_acl=0
@@ -300,7 +415,67 @@ sudo iptables -A FORWARD -i eth0 -o wlan0 -m state --state RELATED,ESTABLISHED -
 sudo netfilter-persistent save
 ```
 
-### 3.7 Enable and Start Services
+### 3.7 Unblock WiFi (rfkill) and Enable NetworkManager WiFi Radio
+
+WiFi might be soft-blocked by rfkill on fresh installs, and NetworkManager often has the WiFi radio disabled by default. Both need to be enabled.
+
+```bash
+# Check NetworkManager WiFi radio status
+nmcli radio wifi
+
+# If it shows "disabled", enable it:
+sudo nmcli radio wifi on
+
+# Check rfkill status
+sudo rfkill list
+
+# Unblock WiFi
+sudo rfkill unblock wlan
+
+# Verify WiFi is unblocked
+sudo rfkill list
+```
+
+You should see:
+- `nmcli radio wifi` returns `enabled`
+- `Soft blocked: no` for the WLAN device in rfkill list
+
+**Make WiFi unblocking persistent across reboots:**
+
+Create a systemd service to automatically enable WiFi on every boot:
+
+```bash
+sudo nano /etc/systemd/system/rfkill-unblock-wifi.service
+```
+
+**Add:**
+
+```ini
+[Unit]
+Description=Unblock WiFi rfkill on boot
+After=NetworkManager.service
+Before=hostapd.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/nmcli radio wifi on
+ExecStart=/usr/sbin/rfkill unblock wlan
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Save and exit. Then enable it:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable rfkill-unblock-wifi.service
+```
+
+This ensures that both NetworkManager's WiFi radio and rfkill are enabled before hostapd starts on every boot.
+
+### 3.8 Enable and Start Services
 
 ```bash
 sudo systemctl unmask hostapd
@@ -310,20 +485,104 @@ sudo systemctl start hostapd
 sudo systemctl start dnsmasq
 ```
 
-### 3.8 Check Service Status
+### 3.9 Check Service Status
 
 ```bash
 sudo systemctl status hostapd
 sudo systemctl status dnsmasq
 ```
 
-Both should show "active (running)" in green.
+**Expected output for hostapd:**
+- `Active: active (running)` in green
+- `wlan0: AP-ENABLED`
+- `interface state ENABLED`
 
-### 3.9 Reboot Pi
+**Expected output for dnsmasq:**
+- `Active: active (running)` in green
+- `DHCP, IP range 192.168.50.10 -- 192.168.50.50`
+
+### 3.10 Verify Configuration (Before Reboot)
+
+**Critical check - wlan0 must have an IP address:**
+
+```bash
+# Check wlan0 has the static IP
+ip addr show wlan0 | grep "inet "
+```
+
+**Expected output:** `inet 192.168.50.1/24`
+
+**If wlan0 has NO IP address**, manually assign it before rebooting:
+
+```bash
+sudo ip addr add 192.168.50.1/24 dev wlan0
+sudo systemctl restart dnsmasq
+sudo systemctl restart hostapd
+```
+
+Then verify services again.
+
+### 3.11 Test WiFi Connection
+
+Before rebooting, test the WiFi AP:
+
+```bash
+# Monitor DHCP activity
+sudo journalctl -u dnsmasq -f
+```
+
+From another device:
+1. Look for the WiFi network "ResearchLab" (or your chosen SSID)
+2. Connect using the password from step 3.4
+3. Check if you get an IP in the range 192.168.50.10-50
+4. Test internet connectivity by browsing a website
+
+You should see DHCP activity in the logs showing:
+- `DHCPDISCOVER`
+- `DHCPOFFER`
+- `DHCPREQUEST`
+- `DHCPACK`
+
+Press Ctrl+C to stop monitoring.
+
+### 3.12 Reboot Pi
+
+Once everything is working:
 
 ```bash
 sudo reboot
 ```
+
+### 3.13 Post-Reboot Verification
+
+After the Pi reboots, SSH back in and verify everything is still working:
+
+```bash
+# Check wlan0 has the IP address
+ip addr show wlan0 | grep "inet "
+# Should show: inet 192.168.50.1/24
+
+# Check IP forwarding is enabled (CRITICAL)
+sysctl net.ipv4.ip_forward
+# Should show: net.ipv4.ip_forward = 1
+
+# Check hostapd is running
+sudo systemctl status hostapd
+# Should show: Active: active (running) and AP-ENABLED
+
+# Check dnsmasq is running
+sudo systemctl status dnsmasq
+# Should show: Active: active (running)
+
+# Verify WiFi clients can connect
+sudo journalctl -u dnsmasq -n 50 | grep DHCP
+```
+
+**Critical checks:**
+- ✓ wlan0 has IP `192.168.50.1/24`
+- ✓ **IP forwarding = 1** (if this is 0, WiFi clients won't have internet!)
+- ✓ hostapd shows `AP-ENABLED`
+- ✓ dnsmasq is running
 
 ---
 
@@ -333,7 +592,7 @@ sudo reboot
 
 From your phone or laptop:
 1. Search for WiFi networks
-2. Connect to: **TapoResearchLab**
+2. Connect to: **ResearchLab**
 3. Password: **ResearchLab2024!**
 4. You should get IP: 192.168.50.x (e.g., 192.168.50.15)
 
@@ -556,7 +815,7 @@ nslookup google.com
 ```
 
 **Test from connected device:**
-1. Connect your phone/laptop to TapoResearchLab WiFi
+1. Connect your phone/laptop to ResearchLab WiFi
 2. Open browser, go to: https://ipleak.net
 3. Verify:
    - IP address shows VPN provider's IP
@@ -635,7 +894,7 @@ curl ifconfig.me
 ```
 
 **From connected device:**
-1. Connect to TapoResearchLab WiFi
+1. Connect to ResearchLab WiFi
 2. Visit https://ipleak.net
 3. Confirm VPN IP is shown
 4. Test: `curl ifconfig.me` or visit whatismyip.com
@@ -643,6 +902,82 @@ curl ifconfig.me
 ---
 
 ## Troubleshooting
+
+### Issue: wlan0 has no IP after reboot
+
+**Solution:**
+```bash
+# If using NetworkManager, ensure the systemd service is enabled
+sudo systemctl status wlan0-static-ip.service
+sudo systemctl enable wlan0-static-ip.service
+sudo systemctl start wlan0-static-ip.service
+
+# Verify wlan0 has IP
+ip addr show wlan0 | grep "inet "
+```
+
+### Issue: hostapd shows "rfkill: WLAN soft blocked"
+
+**Cause:** WiFi is blocked by rfkill or NetworkManager has WiFi radio disabled.
+
+**Solution:**
+```bash
+# Check NetworkManager WiFi radio
+nmcli radio wifi
+# If it shows "disabled":
+sudo nmcli radio wifi on
+
+# Unblock rfkill
+sudo rfkill unblock wlan
+
+# Restart hostapd
+sudo systemctl restart hostapd
+sudo systemctl status hostapd
+```
+
+**Make it permanent:** Ensure the `rfkill-unblock-wifi.service` is enabled (see section 3.7).
+
+### Issue: Clients connect but get "DHCP packet received on wlan0 which has no address"
+
+**Cause:** wlan0 doesn't have the static IP assigned.
+
+**Solution:**
+```bash
+sudo ip addr add 192.168.50.1/24 dev wlan0
+sudo systemctl restart dnsmasq
+sudo systemctl restart hostapd
+
+# Verify
+ip addr show wlan0 | grep "inet "
+```
+
+### Issue: Clients connect and get IP but "No Internet" or can't browse
+
+**Cause:** IP forwarding is disabled on the Pi. This prevents traffic from being routed between wlan0 (WiFi) and eth0 (internet).
+
+**Solution:**
+```bash
+# Check IP forwarding status
+sysctl net.ipv4.ip_forward
+# If it shows "net.ipv4.ip_forward = 0", it's disabled
+
+# Enable IP forwarding immediately
+sudo sysctl -w net.ipv4.ip_forward=1
+
+# Make it persistent across reboots (use systemd method)
+echo "net.ipv4.ip_forward=1" | sudo tee /etc/sysctl.d/99-ip-forward.conf
+
+# Apply the configuration
+sudo sysctl -p /etc/sysctl.d/99-ip-forward.conf
+
+# Verify it's enabled
+sysctl net.ipv4.ip_forward
+# Should show: net.ipv4.ip_forward = 1
+```
+
+**Test from your phone:** Internet should work immediately after enabling IP forwarding.
+
+**Note:** If you previously added `net.ipv4.ip_forward=1` to `/etc/sysctl.conf` but it doesn't persist after reboot, that's because modern Raspberry Pi OS uses systemd and prioritizes `/etc/sysctl.d/` files. Use the method above with `/etc/sysctl.d/99-ip-forward.conf` for guaranteed persistence.
 
 ### WiFi AP Not Showing
 
@@ -653,27 +988,48 @@ sudo systemctl status hostapd
 # Check for errors
 sudo journalctl -u hostapd -n 50
 
+# Check NetworkManager WiFi radio
+nmcli radio wifi
+# If disabled, enable it:
+sudo nmcli radio wifi on
+
 # Verify wlan0 is not blocked
 sudo rfkill list
 # If blocked, unblock:
-sudo rfkill unblock wifi
+sudo rfkill unblock wlan
 
 # Restart hostapd
 sudo systemctl restart hostapd
+
+# Verify wlan0 is UP and has IP
+ip addr show wlan0
 ```
 
 ### No Internet on Connected Devices
+
+**First, check IP forwarding on the Pi (most common cause):**
 
 ```bash
 # On Pi, check IP forwarding
 sysctl net.ipv4.ip_forward
 # Should be 1
 
-# Check iptables rules
+# If it's 0, enable it:
+sudo sysctl -w net.ipv4.ip_forward=1
+echo "net.ipv4.ip_forward=1" | sudo tee /etc/sysctl.d/99-ip-forward.conf
+sudo sysctl -p /etc/sysctl.d/99-ip-forward.conf
+
+# Test internet from phone immediately - it should work now
+```
+
+**If IP forwarding is enabled (= 1) but still no internet:**
+
+```bash
+# Check iptables rules on Pi
 sudo iptables -t nat -L -n -v
 sudo iptables -L FORWARD -n -v
 
-# Test from Pi
+# Test connectivity from Pi
 ping 192.168.100.1  # Ubuntu PC
 ping 8.8.8.8         # Internet
 
@@ -681,7 +1037,7 @@ ping 8.8.8.8         # Internet
 sysctl net.ipv4.ip_forward
 # Should be 1
 
-# Check NAT rules
+# Check NAT rules on Ubuntu PC
 sudo iptables -t nat -L -n -v
 ```
 
@@ -756,12 +1112,12 @@ curl ifconfig.me
 │  │         (VPN encrypted)               │   │
 │  └──────────────────────────────────────┘   │
 └──────────────────┬──────────────────────────┘
-                   │ WiFi: TapoResearchLab
+                   │ WiFi: ResearchLab
                    │ 192.168.50.0/24
         ┌──────────┴──────────┐
         │                     │
 ┌───────▼────────┐   ┌───────▼────────┐
-│ Android Phone  │   │  Tapo Camera   │
+│ Android Phone  │   │  Test Devices  │
 │ 192.168.50.15  │   │ 192.168.50.20  │
 └────────────────┘   └────────────────┘
 ```
@@ -807,7 +1163,7 @@ sudo netstat -tunlp
 ## Summary
 
 You now have:
-- Raspberry Pi WiFi Access Point (SSID: TapoResearchLab)
+- Raspberry Pi WiFi Access Point (SSID: ResearchLab)
 - Internet via Ubuntu PC Ethernet connection
 - VPN running on Raspberry Pi (all traffic encrypted and isolated)
 - Complete isolation from home network
@@ -816,6 +1172,12 @@ You now have:
 - Automatic VPN reconnection
 - Ready for mitmproxy, Wireshark, and Frida analysis
 
+**Boot Sequence (Automatic on every reboot):**
+1. `rfkill-unblock-wifi.service` - Enables NetworkManager WiFi radio and unblocks rfkill
+2. `wlan0-static-ip.service` - Assigns static IP 192.168.50.1/24 to wlan0
+3. `hostapd.service` - Creates WiFi access point on wlan0
+4. `dnsmasq.service` - Provides DHCP to WiFi clients (192.168.50.10-50)
+
 **Traffic Flow:**
 ```
 Device → Pi WiFi → VPN (tun0/wg0) → Ubuntu PC → Internet
@@ -823,9 +1185,36 @@ Device → Pi WiFi → VPN (tun0/wg0) → Ubuntu PC → Internet
 ```
 
 **Next Steps:**
-- Connect your Android phone and Tapo camera to TapoResearchLab WiFi
+- Connect your Android phone and test devices to ResearchLab WiFi
 - Install mitmproxy for HTTPS interception (separate guide)
 - Install Wireshark for packet capture
 - Set up Frida for Android app analysis
+
+---
+
+## Key Updates (December 2025)
+
+This guide has been updated based on real-world testing with modern Raspberry Pi OS to address common issues:
+
+1. **NetworkManager Support**: Added detection and configuration for systems using NetworkManager instead of dhcpcd
+2. **wlan0 Static IP Persistence**: Created systemd service (`wlan0-static-ip.service`) to ensure wlan0 IP survives reboots
+3. **NetworkManager WiFi Radio Fix**: Discovered that NetworkManager disables WiFi radio by default, preventing hostapd from working. Created `rfkill-unblock-wifi.service` to automatically enable both NetworkManager WiFi radio and unblock rfkill on every boot.
+4. **Pre-Reboot Verification**: Added critical verification steps before rebooting to catch configuration issues early
+5. **Enhanced Testing**: Added WiFi connection testing before reboot to ensure everything works
+6. **IP Forwarding Persistence Fix**: Discovered that `/etc/sysctl.conf` is not reliably applied on modern Raspberry Pi OS. Switched to systemd method using `/etc/sysctl.d/99-ip-forward.conf` which guarantees IP forwarding persists across reboots. Added critical verification checks throughout the guide.
+7. **Expanded Troubleshooting**: Comprehensive solutions for common issues including:
+   - wlan0 missing IP address
+   - NetworkManager WiFi radio disabled
+   - rfkill WiFi blocking
+   - DHCP packets on unconfigured interface
+   - IP forwarding disabled after reboot
+8. **Post-Reboot Checks**: Added verification steps after reboot to ensure setup persists, including IP forwarding check
+
+These improvements prevent the most common failure modes:
+- wlan0 doesn't get its static IP, causing DHCP to fail
+- NetworkManager re-blocks WiFi radio after rfkill unblock, causing hostapd to fail on reboot
+- IP forwarding not persisting after reboot due to `/etc/sysctl.conf` being ignored by systemd, causing "No Internet" on WiFi clients despite successful connection and DHCP lease
+
+---
 
 Stay vigilant. Stay secure.

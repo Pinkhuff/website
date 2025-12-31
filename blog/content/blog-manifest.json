@@ -6,5 +6,14 @@
     "author": "Pinkhuff Team",
     "excerpt": "Embedded systems are everywhere - from the smart thermostat controlling your home's temperature to the engine control unit in your vehicle, from medical devices monitoring vital signs to industrial control systems managing critical infrastructure. As these devices become increasingly connected an...",
     "category": "Embedded Systems, IoT Security"
+  },
+  {
+    "id": "intro-to-re",
+    "title": "Intro to Reverse Engineering (RE)",
+    "date": "December 31, 2025",
+    "author": "Pinkhuff Team",
+    "excerpt": "A beginner‑friendly guide covering tools, training, equipment, and key RE concepts.",
+    "category": "Reverse Engineering, Security, Learning"
   }
+  
 ]

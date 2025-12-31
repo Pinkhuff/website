@@ -117,3 +117,5 @@ If you're brand new to reverse engineering, follow this path:
 - **Advanced Kit** ($1000+): Professional tools, oscilloscope, full hardware hacking suite
 
 Happy hacking, and may your binaries unfold before you!
+
+Stay vigilant. Stay secure.

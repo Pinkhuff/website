@@ -104,3 +104,5 @@ At Pinkhuff, we specialize in analyzing embedded systems for security vulnerabil
 ---
 
 *Interested in learning more about embedded security or need help securing your devices? Contact us for a consultation.*
+
+Stay vigilant. Stay secure.

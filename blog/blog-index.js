@@ -52,9 +52,12 @@ function renderPosts(posts, searchTerm = '') {
         const excerpt = highlightText(post.excerpt, searchTerm);
         const category = post.category ? highlightText(post.category, searchTerm) : '';
 
+        // Number oldest to newest (reverse the display index)
+        const postNumber = posts.length - index;
+
         html += `
             <article class="blog-post" data-post-id="${post.id}">
-                <h3 class="blog-post-title">[${String(index + 1).padStart(2, '0')}] ${title}</h3>
+                <h3 class="blog-post-title">[${String(postNumber).padStart(2, '0')}] ${title}</h3>
                 <p class="blog-post-meta">Published: ${post.date} | Author: ${post.author}</p>
                 ${category ? `<p class="blog-post-category">Category: ${category}</p>` : ''}
                 <p class="blog-post-excerpt">

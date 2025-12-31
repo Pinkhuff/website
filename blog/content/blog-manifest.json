@@ -14,6 +14,29 @@
     "author": "Pinkhuff Team",
     "excerpt": "A beginner‑friendly guide covering tools, training, equipment, and key RE concepts.",
     "category": "Reverse Engineering, Security, Learning"
+  },
+  {
+    "id": "raspberry-pi-router",
+    "title": "Setting up a Raspberry Pi as an isolated router",
+    "date": "December 31, 2025",
+    "author": "Pinkhuff Team",
+    "excerpt": "A guide on configuring a Raspberry Pi to function as an isolated router for enhanced network security and testing purposes.",
+    "category": "Reverse Engineering, Security, Learning, raspberry pi"
+  },
+  {
+    "id": "pi-man-in-the-middle-setup",
+    "title": "Setting up the tools on a Raspberry Pi router",
+    "date": "December 31, 2025",
+    "author": "Pinkhuff Team",
+    "excerpt": "A guide on configuring the tools on a Raspberry Pi to function as an isolated router fto conduct reverse engineering and security testing.",
+    "category": "Reverse Engineering, Security, Learning, tools, raspberry pi"
+  },
+  {
+    "id": "using-logic-analyser-to-workout-uart-baud-rate",
+    "title": "Using a Logic Analyser to Work Out UART Baud Rate",
+    "date": "December 31, 2025",
+    "author": "Pinkhuff Team",
+    "excerpt": "A guide on how to use a logic analyser to determine the baud rate of UART communication for reverse engineering and security testing.",
+    "category": "Embedded Systems, Security, Learning, tools, uart"
   }
-  
 ]

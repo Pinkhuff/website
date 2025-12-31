@@ -5,7 +5,8 @@
     "date": "December 30, 2025",
     "author": "Pinkhuff Team",
     "excerpt": "Embedded systems are everywhere - from the smart thermostat controlling your home's temperature to the engine control unit in your vehicle, from medical devices monitoring vital signs to industrial control systems managing critical infrastructure. As these devices become increasingly connected an...",
-    "category": "Embedded Systems, IoT Security"
+    "category": "Embedded Systems, IoT Security",
+    "type": "blog"
   },
   {
     "id": "intro-to-re",
@@ -13,7 +14,8 @@
     "date": "December 31, 2025",
     "author": "Pinkhuff Team",
     "excerpt": "A beginner‑friendly guide covering tools, training, equipment, and key RE concepts.",
-    "category": "Reverse Engineering, Security, Learning"
+    "category": "Reverse Engineering, Security, Learning",
+    "type": "guide"
   },
   {
     "id": "raspberry-pi-router",
@@ -21,7 +23,8 @@
     "date": "December 31, 2025",
     "author": "Pinkhuff Team",
     "excerpt": "A guide on configuring a Raspberry Pi to function as an isolated router for enhanced network security and testing purposes.",
-    "category": "Reverse Engineering, Security, Learning, raspberry pi"
+    "category": "Reverse Engineering, Security, Learning, raspberry pi",
+    "type": "guide"
   },
   {
     "id": "pi-man-in-the-middle-setup",
@@ -29,7 +32,8 @@
     "date": "December 31, 2025",
     "author": "Pinkhuff Team",
     "excerpt": "A guide on configuring the tools on a Raspberry Pi to function as an isolated router fto conduct reverse engineering and security testing.",
-    "category": "Reverse Engineering, Security, Learning, tools, raspberry pi"
+    "category": "Reverse Engineering, Security, Learning, tools, raspberry pi",
+    "type": "guide"
   },
   {
     "id": "using-logic-analyser-to-workout-uart-baud-rate",
@@ -37,6 +41,7 @@
     "date": "December 31, 2025",
     "author": "Pinkhuff Team",
     "excerpt": "A guide on how to use a logic analyser to determine the baud rate of UART communication for reverse engineering and security testing.",
-    "category": "Embedded Systems, Security, Learning, tools, uart"
+    "category": "Embedded Systems, Security, Learning, tools, uart",
+    "type": "guide"
   }
 ]

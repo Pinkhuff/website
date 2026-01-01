@@ -24,13 +24,24 @@ mitmproxy is a transparent HTTPS proxy that intercepts and decrypts SSL/TLS traf
 
 ```bash
 # SSH to Raspberry Pi
-ssh pi@192.168.100.2
+ssh dev@192.168.100.134
 
 # Update and install
-sudo apt update
-sudo apt install -y mitmproxy python3-pip
+sudo apt update && sudo apt full-upgrade -y
 
-# Verify installation
+# Install pipx
+sudo apt-get install -y pipx
+
+# Ensure pipx paths are set up
+pipx ensurepath
+
+# Source shell config
+source ~/.bashrc
+
+# Install mitmproxy
+pipx install mitmproxy
+
+# Verify install
 mitmproxy --version
 ```
 
@@ -52,13 +63,14 @@ web_host: 0.0.0.0
 web_port: 8081
 
 # Transparent proxy mode
-mode: transparent
+mode:
+ - transparent
 
 # Show full URLs in logs
 showhost: true
 
 # Save all traffic to file
-save_stream_file: /home/pi/captures/mitmproxy-flows.mitm
+save_stream_file: /home/dev/captures/mitmproxy-flows.mitm
 
 # Don't block connections without valid certs (for IoT devices)
 ssl_insecure: true
@@ -69,8 +81,8 @@ Save and exit (Ctrl+X, Y, Enter).
 ### 1.3 Create Captures Directory
 
 ```bash
-mkdir -p /home/pi/captures
-chmod 755 /home/pi/captures
+mkdir -p ~/captures
+chmod 755 ~/captures/
 ```
 
 ### 1.4 Configure iptables to Redirect Traffic
@@ -95,7 +107,10 @@ Create a service to run mitmproxy automatically:
 ```bash
 sudo nano /etc/systemd/system/mitmweb.service
 ```
-
+- Check path for mitmproxy is correct
+```bash
+which mitmweb
+```
 **Add:**
 
 ```ini
@@ -105,13 +120,13 @@ After=network.target
 
 [Service]
 Type=simple
-User=root
-WorkingDirectory=/home/pi
-ExecStart=/usr/bin/mitmweb --mode transparent --showhost --web-host 0.0.0.0 --ssl-insecure
+User=dev
+WorkingDirectory=/home/dev
+ExecStart=/home/dev/.local/bin/mitmweb --mode transparent --showhost --web-host 0.0.0.0 --ssl-insecure
 Restart=on-failure
 RestartSec=5
-StandardOutput=append:/home/pi/captures/mitmweb.log
-StandardError=append:/home/pi/captures/mitmweb.log
+StandardOutput=append:/home/dev/captures/mitmweb.log
+StandardError=append:/home/dev/captures/mitmweb.log
 
 [Install]
 WantedBy=multi-user.target
@@ -141,7 +156,7 @@ sudo systemctl status mitmweb
 From your Ubuntu PC, open a browser:
 
 ```
-http://192.168.100.2:8081
+http://192.168.100.134:8081
 ```
 
 You should see the mitmproxy web interface. It will be empty until devices connect and make requests.
@@ -163,7 +178,7 @@ For mitmproxy to decrypt HTTPS traffic, devices must trust its CA certificate.
 
 ### 2.1 Access Certificate Download Page
 
-**From a device connected to TapoResearchLab WiFi:**
+**From a device connected to ResearchLab WiFi:**
 
 1. Open a web browser
 2. Navigate to: `http://mitm.it`
@@ -224,7 +239,7 @@ We'll cover this in Part 4 - Frida Setup.
 2. You should see "mitmproxy Research" or similar
 3. Open Chrome browser
 4. Visit `https://google.com`
-5. Check mitmweb at `http://192.168.100.2:8081` from Ubuntu PC
+5. Check mitmweb at `http://192.168.100.134:8081` from Ubuntu PC
 6. You should now see the decrypted HTTPS request
 
 ### 2.4 TP-Link Tapo Camera Certificate
@@ -265,7 +280,7 @@ sudo usermod -aG wireshark pi
 
 # Log out and back in for group to take effect
 exit
-ssh pi@192.168.100.2
+ssh dev@192.168.100.134
 ```
 
 ### 3.2 Basic Packet Capture with tcpdump
@@ -273,7 +288,7 @@ ssh pi@192.168.100.2
 **Capture all traffic on wlan0:**
 
 ```bash
-sudo tcpdump -i wlan0 -w /home/pi/captures/full-capture.pcap
+sudo tcpdump -i wlan0 -w /home/dev/captures/full-capture.pcap
 # Press Ctrl+C to stop
 ```
 
@@ -284,23 +299,23 @@ sudo tcpdump -i wlan0 -w /home/pi/captures/full-capture.pcap
 cat /var/lib/misc/dnsmasq.leases
 
 # Capture traffic from/to specific IP
-sudo tcpdump -i wlan0 host 192.168.50.20 -w /home/pi/captures/tapo-camera.pcap
+sudo tcpdump -i wlan0 host 192.168.50.20 -w /home/dev/captures/tapo-camera.pcap
 ```
 
 **Capture with timestamp in filename:**
 
 ```bash
-sudo tcpdump -i wlan0 -w /home/pi/captures/capture-$(date +%Y%m%d-%H%M%S).pcap
+sudo tcpdump -i wlan0 -w /home/dev/captures/capture-$(date +%Y%m%d-%H%M%S).pcap
 ```
 
 ### 3.3 Transfer Captures to Ubuntu PC
 
 ```bash
 # From Ubuntu PC
-scp pi@192.168.100.2:/home/pi/captures/*.pcap ~/research/
+scp dev@192.168.100.134:/home/dev/captures/*.pcap ~/research/
 
 # Or use rsync for multiple files
-rsync -avz pi@192.168.100.2:/home/pi/captures/ ~/research/captures/
+rsync -avz dev@192.168.100.134:/home/dev/captures/ ~/research/captures/
 ```
 
 ### 3.4 Analyze with Wireshark on Ubuntu PC
@@ -356,13 +371,13 @@ ip.addr == 54.123.45.67
 
 ### 3.6 Automated Capture Script
 
-Create `/home/pi/start-capture.sh`:
+Create `/home/dev/start-capture.sh`:
 
 ```bash
 #!/bin/bash
 
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-CAPTURE_DIR="/home/pi/captures"
+CAPTURE_DIR="/home/dev/captures"
 INTERFACE="wlan0"
 
 echo "[*] Starting packet capture on $INTERFACE"
@@ -377,7 +392,7 @@ echo "[+] Capture saved to: $CAPTURE_DIR/capture-$TIMESTAMP.pcap"
 Make executable:
 
 ```bash
-chmod +x /home/pi/start-capture.sh
+chmod +x /home/dev/start-capture.sh
 ```
 
 Use it:
@@ -443,6 +458,7 @@ sudo apt install -y adb android-tools-adb
 adb devices
 # Should show your device with "device" status
 ```
+- If the output shows ```unauthorized``` then you will need to accpt the popup on the android phone. Select Always allow from this computer -> Ok
 
 **If showing "unauthorized":**
 - Check Android screen for authorization prompt
@@ -450,6 +466,12 @@ adb devices
 - Try `adb devices` again
 
 ### 4.3 Install Frida Tools on Ubuntu PC
+
+- Confirm architecture of your device 
+```bash 
+$ adb shell getprop ro.product.cpu.abi
+arm64-v8a
+```
 
 ```bash
 # Create virtual environment
@@ -599,7 +621,7 @@ cd ~/
 
 Open browser to mitmproxy web interface:
 ```
-http://192.168.100.2:8081
+http://192.168.100.134:8081
 ```
 
 Start Frida (in another terminal):
@@ -763,7 +785,7 @@ With Frida running, use the Tapo app normally:
 
 ```bash
 # From Ubuntu PC
-scp pi@192.168.100.2:/home/pi/captures/capture-*.pcap ~/research/
+scp dev@192.168.100.134:/home/dev/captures/capture-*.pcap ~/research/
 ```
 
 **Analyze in Wireshark:**
@@ -779,7 +801,7 @@ wireshark ~/research/capture-*.pcap
 mitmproxy -r ~/captures/mitmproxy-flows.mitm
 
 # Or copy to Ubuntu PC and view there
-scp pi@192.168.100.2:/home/pi/captures/mitmproxy-flows.mitm ~/research/
+scp dev@192.168.100.134:/home/dev/captures/mitmproxy-flows.mitm ~/research/
 mitmproxy -r ~/research/mitmproxy-flows.mitm
 ```
 
@@ -945,7 +967,7 @@ Java.perform(function() {
 
 ```bash
 # Terminal 1 - Raspberry Pi: Start packet capture
-ssh pi@192.168.100.2
+ssh dev@192.168.100.134
 ~/start-capture.sh
 
 # Terminal 2 - Ubuntu PC: Start Frida
@@ -953,14 +975,14 @@ source ~/frida-env/bin/activate
 frida -U -f com.tplink.iot -l ~/frida-scripts/tapo-analysis.js --no-pause
 
 # Browser - mitmproxy web interface
-# Open: http://192.168.100.2:8081
+# Open: http://192.168.100.134:8081
 ```
 
 ### View Logs in Real-Time
 
 ```bash
 # mitmproxy logs on Pi
-ssh pi@192.168.100.2
+ssh dev@192.168.100.134
 tail -f ~/captures/mitmweb.log
 
 # DHCP leases (connected devices)
@@ -977,7 +999,7 @@ sudo iftop -i wlan0
 # Stop Frida: Ctrl+C
 
 # Transfer all captures
-scp pi@192.168.100.2:/home/pi/captures/* ~/research/$(date +%Y%m%d)/
+scp dev@192.168.100.134:/home/dev/captures/* ~/research/$(date +%Y%m%d)/
 ```
 
 ---

@@ -43,5 +43,14 @@
     "excerpt": "A guide on how to use a logic analyser to determine the baud rate of UART communication for reverse engineering and security testing.",
     "category": "Embedded Systems, Security, Learning, tools, uart",
     "type": "guide"
+  },
+  {
+    "id": "how-to-root-one-plus",
+    "title": "How to root a One Plus device",
+    "date": "January 01, 2026",
+    "author": "Pinkhuff Team",
+    "excerpt": "A guide on how to use a logic analyser to determine the baud rate of UART communication for reverse engineering and security testing.",
+    "category": "android, Security, Learning, tools",
+    "type": "guide"
   }
 ]

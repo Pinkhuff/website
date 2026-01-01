@@ -13,8 +13,8 @@ This guide sets up a Raspberry Pi as an isolated WiFi access point that:
 
 **Network Flow:**
 ```
-Internet → Ubuntu PC (VPN) → Ethernet → Raspberry Pi → WiFi AP → Test Devices
-           192.168.1.x         |        192.168.100.2   192.168.50.1
+Internet → Ubuntu PC → Ethernet → Raspberry Pi (VPN)  → WiFi AP → Test Devices
+           192.168.1.x         |       192.168.100.2              192.168.50.1
                                |
                         192.168.100.1
 ```
@@ -617,291 +617,307 @@ Your research network is now completely isolated:
 
 ---
 
-## Part 5: VPN Configuration on Raspberry Pi
+## Part 5: ProtonVPN Configuration on Raspberry Pi
 
-### 5.1 Install VPN Client on Pi
+This guide uses **ProtonVPN with WireGuard** for maximum performance and reliability.
 
-**Option A: OpenVPN**
+### 5.1 Get ProtonVPN WireGuard Configuration
 
-```bash
-sudo apt install -y openvpn
+**On your Ubuntu PC:**
 
-# Copy your .ovpn file from Ubuntu PC to Pi
-# From Ubuntu PC:
-scp ~/vpn-configs/your-vpn.ovpn pi@192.168.100.2:/home/pi/
+1. Log into your ProtonVPN account at https://account.protonvpn.com
+2. Go to **Downloads** → **WireGuard configuration**
+3. Select your desired server location (e.g., UK, US, etc.)
+4. Download the configuration file (e.g., `pi-UK-713.conf`)
 
-# Or create the file directly on Pi
-# sudo nano /home/pi/your-vpn.ovpn
-# Paste your VPN config and save
-```
+### 5.2 Install WireGuard on Raspberry Pi
 
-**Test OpenVPN connection:**
-```bash
-sudo openvpn --config /home/pi/your-vpn.ovpn
-# You should see "Initialization Sequence Completed"
-# Press Ctrl+C to stop
-```
-
-**Option B: WireGuard (Recommended - Faster & More Reliable)**
+**SSH into the Pi and install required packages:**
 
 ```bash
-sudo apt install -y wireguard wireguard-tools
+# Install WireGuard and resolvconf (needed for DNS management)
+sudo apt install -y wireguard wireguard-tools resolvconf
 
 # Create WireGuard config directory
 sudo mkdir -p /etc/wireguard
-
-# Copy your .conf file from Ubuntu PC
-# From Ubuntu PC:
-scp ~/Downloads/wg0.conf pi@192.168.100.2:/tmp/
-# Then on Pi:
-sudo mv /tmp/wg0.conf /etc/wireguard/
-sudo chmod 600 /etc/wireguard/wg0.conf
-
-# Or create the file directly on Pi
-sudo nano /etc/wireguard/wg0.conf
-# Paste your WireGuard config:
 ```
 
-**Example WireGuard config structure:**
+### 5.3 Transfer ProtonVPN Config to Pi
+
+**From your Ubuntu PC:**
+
+```bash
+# Copy the ProtonVPN config file to the Pi
+scp ~/Downloads/pi-UK-713.conf dev@192.168.100.134:/tmp/
+```
+
+**On the Raspberry Pi:**
+
+```bash
+# Move config to WireGuard directory and rename to wg0.conf
+sudo mv /tmp/pi-UK-713.conf /etc/wireguard/wg0.conf
+
+# Set secure permissions
+sudo chmod 600 /etc/wireguard/wg0.conf
+```
+
+### 5.4 Add Killswitch and Routing Rules
+
+The killswitch ensures WiFi clients have NO internet if the VPN connection drops - preventing any data leaks.
+
+**Edit the WireGuard config:**
+
+```bash
+sudo nano /etc/wireguard/wg0.conf
+```
+
+**Add these lines in the `[Interface]` section** (after the `DNS` line):
+
+```ini
+PostUp = iptables -D FORWARD -i wlan0 -j DROP; iptables -t nat -A POSTROUTING -o wg0 -j MASQUERADE; iptables -A FORWARD -i wlan0 -o wg0 -j ACCEPT; iptables -A FORWARD -i wg0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+PreDown = iptables -t nat -D POSTROUTING -o wg0 -j MASQUERADE; iptables -D FORWARD -i wlan0 -o wg0 -j ACCEPT; iptables -D FORWARD -i wg0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT; iptables -I FORWARD 1 -i wlan0 -j DROP
+```
+
+**Your config should look like this:**
+
 ```ini
 [Interface]
+# ProtonVPN config details
 PrivateKey = YOUR_PRIVATE_KEY_HERE
-Address = 10.x.x.x/32
-DNS = 1.1.1.1
+Address = 10.2.0.2/32
+DNS = 10.2.0.1
+PostUp = iptables -D FORWARD -i wlan0 -j DROP; iptables -t nat -A POSTROUTING -o wg0 -j MASQUERADE; iptables -A FORWARD -i wlan0 -o wg0 -j ACCEPT; iptables -A FORWARD -i wg0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+PreDown = iptables -t nat -D POSTROUTING -o wg0 -j MASQUERADE; iptables -D FORWARD -i wlan0 -o wg0 -j ACCEPT; iptables -D FORWARD -i wg0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT; iptables -I FORWARD 1 -i wlan0 -j DROP
 
 [Peer]
+# ProtonVPN Server
 PublicKey = SERVER_PUBLIC_KEY_HERE
-Endpoint = vpn.provider.com:51820
-AllowedIPs = 0.0.0.0/0
+AllowedIPs = 0.0.0.0/0, ::/0
+Endpoint = 186.134.187.2:51820
 ```
+- cCnfig will chnage dependig on vpn config
 
-**Test WireGuard connection:**
+Save and exit (Ctrl+X, Y, Enter)
+
+### 5.5 Set Up Killswitch Default Rule
+
+Create a persistent DROP rule for WiFi traffic (killswitch default state):
+
 ```bash
-sudo wg-quick up wg0
-# Should see "interface wg0 is up"
+# Remove any old eth0 MASQUERADE rules
+sudo iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE 2>/dev/null || true
 
-# Verify connection
-sudo wg show
-# Should show handshake information
+# Add default DROP rule for WiFi (killswitch when VPN is down)
+sudo iptables -I FORWARD 1 -i wlan0 -j DROP
 
-# Check VPN IP
-curl ifconfig.me
-# Should show VPN provider's IP
-
-# Stop VPN for now
-sudo wg-quick down wg0
-```
-
-### 5.2 Update iptables to Route Through VPN
-
-**First, determine your VPN interface:**
-- OpenVPN: `tun0`
-- WireGuard: `wg0`
-
-**Remove the old routing rule (through eth0):**
-```bash
-sudo iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
-```
-
-**Add VPN routing rules:**
-
-For **OpenVPN (tun0)**:
-```bash
-sudo iptables -t nat -A POSTROUTING -o tun0 -j MASQUERADE
-sudo iptables -A FORWARD -i wlan0 -o tun0 -j ACCEPT
-sudo iptables -A FORWARD -i tun0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
-
-# Allow VPN traffic to go through eth0 (to Ubuntu PC)
-sudo iptables -A FORWARD -i eth0 -o tun0 -j ACCEPT
-sudo iptables -A FORWARD -i tun0 -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT
-```
-
-For **WireGuard (wg0)**:
-```bash
-sudo iptables -t nat -A POSTROUTING -o wg0 -j MASQUERADE
-sudo iptables -A FORWARD -i wlan0 -o wg0 -j ACCEPT
-sudo iptables -A FORWARD -i wlan0 -o wg0 -m state --state RELATED,ESTABLISHED -j ACCEPT
-
-# Allow VPN traffic to go through eth0 (to Ubuntu PC)
-sudo iptables -A FORWARD -i eth0 -o wg0 -j ACCEPT
-sudo iptables -A FORWARD -i wg0 -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT
-```
-
-**Save iptables rules:**
-```bash
+# Save these rules
 sudo netfilter-persistent save
 ```
 
-### 5.3 Enable VPN to Start on Boot
+**Important:** Your phone will have NO INTERNET now (killswitch is active). This is correct! The VPN will remove this rule when it starts.
 
-**For OpenVPN:**
-
-```bash
-# Enable the service (replace 'your-vpn' with your config filename without .ovpn)
-# If your file is /home/pi/mullvad.ovpn, use:
-sudo systemctl enable openvpn@mullvad
-sudo systemctl start openvpn@mullvad
-
-# Check status
-sudo systemctl status openvpn@mullvad
-```
-
-**For WireGuard:**
+### 5.6 Start VPN and Enable on Boot
 
 ```bash
-sudo systemctl enable wg-quick@wg0
+# Start ProtonVPN via systemd
 sudo systemctl start wg-quick@wg0
 
-# Check status
+# Check status - should show "active (exited)"
 sudo systemctl status wg-quick@wg0
-```
 
-### 5.4 Create VPN Killswitch (Optional but Recommended)
+# Verify VPN is connected
+sudo wg show
+# Should show: latest handshake, transfer stats
 
-This ensures no traffic leaks if VPN disconnects.
-
-**For OpenVPN:**
-
-Create `/etc/openvpn/update-resolv-conf`:
-```bash
-sudo nano /etc/openvpn/update-resolv-conf
-```
-
-Add to your OpenVPN config:
-```
-script-security 2
-up /etc/openvpn/update-resolv-conf
-down /etc/openvpn/update-resolv-conf
-```
-
-**For WireGuard:**
-
-Add to `/etc/wireguard/wg0.conf` in the `[Interface]` section:
-```ini
-PostUp = iptables -I FORWARD -i wlan0 ! -o wg0 -j REJECT
-PreDown = iptables -D FORWARD -i wlan0 ! -o wg0 -j REJECT
-```
-
-This blocks WiFi traffic if it's not going through the VPN.
-
-### 5.5 Verify VPN is Working
-
-**Start the VPN:**
-```bash
-# OpenVPN:
-sudo systemctl start openvpn@your-vpn
-
-# WireGuard:
-sudo wg-quick up wg0
-```
-
-**Check VPN interface exists:**
-```bash
-ip addr show tun0  # OpenVPN
-# OR
-ip addr show wg0   # WireGuard
-
-# Should show the VPN interface with an IP address
-```
-
-**Test from Raspberry Pi:**
-```bash
-# Check public IP
+# Check your public IP from the Pi
 curl ifconfig.me
-# Should show VPN provider's IP, NOT your home IP
+# Should show ProtonVPN IP (not your home IP)
 
-# Test DNS
-nslookup google.com
+# Enable VPN to start automatically on boot
+sudo systemctl enable wg-quick@wg0
 ```
 
-**Test from connected device:**
-1. Connect your phone/laptop to ResearchLab WiFi
-2. Open browser, go to: https://ipleak.net
-3. Verify:
-   - IP address shows VPN provider's IP
-   - No DNS leaks (should show VPN DNS)
-   - No WebRTC leaks
+**Your phone should have internet again now** (routed through ProtonVPN).
 
-### 5.6 Automatic VPN Reconnection
+### 5.7 Test the VPN and Killswitch
 
-Create a watchdog script to ensure VPN stays connected.
+**Test VPN is working:**
 
-Create `/home/pi/vpn-watchdog.sh`:
+From your phone connected to ResearchLab WiFi:
+1. Visit https://ipleak.net
+2. Verify:
+   - IP shows ProtonVPN server IP
+   - DNS shows ProtonVPN DNS (10.2.0.1)
+   - No DNS or WebRTC leaks
+3. Try browsing - should work normally
+
+**Test killswitch (CRITICAL):**
+
+On the Raspberry Pi:
 ```bash
-#!/bin/bash
-
-# For OpenVPN
-VPN_INTERFACE="tun0"
-# For WireGuard, use:
-# VPN_INTERFACE="wg0"
-
-# Check if VPN interface exists
-if ! ip link show $VPN_INTERFACE &> /dev/null; then
-    echo "[$(date)] VPN down, restarting..."
-    
-    # For OpenVPN:
-    sudo systemctl restart openvpn@your-vpn
-    
-    # For WireGuard:
-    # sudo wg-quick down wg0
-    # sudo wg-quick up wg0
-    
-    sleep 10
-fi
-
-# Test connectivity through VPN
-if ! ping -c 1 -W 5 -I $VPN_INTERFACE 8.8.8.8 &> /dev/null; then
-    echo "[$(date)] VPN not routing traffic, restarting..."
-    
-    # For OpenVPN:
-    sudo systemctl restart openvpn@your-vpn
-    
-    # For WireGuard:
-    # sudo wg-quick down wg0
-    # sudo wg-quick up wg0
-fi
+# Stop the VPN
+sudo systemctl stop wg-quick@wg0
 ```
 
-Make executable:
+On your phone:
+- Try to browse or use any app
+- You should have **NO INTERNET** (killswitch working!)
+- This proves no data can leak outside the VPN
+
+Restart VPN on the Pi:
 ```bash
-chmod +x /home/pi/vpn-watchdog.sh
+# Start VPN again
+sudo systemctl start wg-quick@wg0
 ```
 
-Add to crontab (runs every 5 minutes):
-```bash
-crontab -e
-# Add this line:
-*/5 * * * * /home/pi/vpn-watchdog.sh >> /home/pi/vpn-watchdog.log 2>&1
-```
+Phone should have internet again through ProtonVPN
 
-### 5.7 Reboot and Final Test
+### 5.8 Reboot and Final Verification
+
+**Test that everything persists across reboot:**
 
 ```bash
 sudo reboot
 ```
 
-After reboot:
+**Wait 60-90 seconds for the Pi to boot** (the VPN takes a moment to establish connection).
 
-**On Raspberry Pi:**
+**After reboot, SSH back into the Pi:**
+
 ```bash
-# Check VPN is running
-sudo systemctl status openvpn@your-vpn  # OpenVPN
-sudo wg show  # WireGuard
-
-# Check public IP
-curl ifconfig.me
-# Should show VPN IP
+ssh dev@192.168.100.134
 ```
 
-**From connected device:**
-1. Connect to ResearchLab WiFi
+**Verify ProtonVPN started automatically:**
+
+```bash
+# Check VPN service is running
+sudo systemctl status wg-quick@wg0
+# Should show: Active: active (exited)
+
+# Check VPN connection details
+sudo wg show
+# Should show:
+#   - interface: wg0
+#   - latest handshake: <recent time>
+#   - transfer: <data stats>
+
+# Check public IP from Pi
+curl ifconfig.me
+# Should show ProtonVPN IP (e.g., 185.130.187.22)
+
+# Verify killswitch DROP rule exists
+sudo iptables -L FORWARD -n -v | grep DROP
+# Should show: DROP all -- wlan0 *
+```
+
+**Test from your phone:**
+
+1. Connect to **ResearchLab** WiFi
 2. Visit https://ipleak.net
-3. Confirm VPN IP is shown
-4. Test: `curl ifconfig.me` or visit whatismyip.com
+3. Verify:
+   - ✓ IP address shows ProtonVPN server IP
+   - ✓ DNS shows ProtonVPN DNS (10.2.0.1)
+   - ✓ No DNS leaks
+   - ✓ No WebRTC leaks
+4. Try browsing - should work normally
+
+**Final killswitch test:**
+
+```bash
+# On Pi: Stop VPN
+sudo systemctl stop wg-quick@wg0
+
+# On phone: Should have NO INTERNET
+
+# On Pi: Start VPN
+sudo systemctl start wg-quick@wg0
+
+# On phone: Internet works again
+```
+
+### 5.9 ProtonVPN Automatic Reconnection
+
+**Good news:** WireGuard with systemd automatically handles reconnection!
+
+- If the VPN connection drops temporarily, WireGuard will automatically re-establish the handshake
+- If the Pi reboots, systemd starts the VPN automatically (because we enabled `wg-quick@wg0.service`)
+- The killswitch ensures no data leaks during any disconnection
+
+No additional watchdog script is needed - systemd manages the service lifecycle
 
 ---
 
-## Troubleshooting
+## ProtonVPN Troubleshooting
+
+### Issue: VPN not working - "resolvconf: command not found"
+
+**Cause:** `resolvconf` package is missing (needed for DNS management).
+
+**Solution:**
+```bash
+sudo apt install -y resolvconf
+sudo systemctl restart wg-quick@wg0
+```
+
+### Issue: Phone has internet when VPN is stopped (killswitch not working)
+
+**Cause:** Old iptables rules allowing eth0 traffic or killswitch DROP rule missing.
+
+**Solution:**
+```bash
+# Check if there are old eth0 rules
+sudo iptables -L FORWARD -n -v | grep eth0
+
+# If you see wlan0 <-> eth0 rules, delete them
+sudo iptables -D FORWARD <line_number>
+
+# Ensure DROP rule exists
+sudo iptables -L FORWARD -n -v | grep DROP
+# If missing, add it:
+sudo iptables -I FORWARD 1 -i wlan0 -j DROP
+
+# Save
+sudo netfilter-persistent save
+
+# Restart VPN
+sudo systemctl restart wg-quick@wg0
+```
+
+### Issue: VPN doesn't start on boot
+
+**Solution:**
+```bash
+# Check if service is enabled
+sudo systemctl is-enabled wg-quick@wg0
+
+# If not enabled:
+sudo systemctl enable wg-quick@wg0
+
+# Check for errors
+sudo journalctl -u wg-quick@wg0 -n 50
+```
+
+### Issue: Check ProtonVPN connection status
+
+```bash
+# View VPN connection details
+sudo wg show
+
+# Check handshake time (should be recent)
+# Check transfer stats (should be increasing)
+
+# Test public IP
+curl ifconfig.me
+
+# Check iptables routing
+sudo iptables -L FORWARD -n -v | grep wg0
+sudo iptables -t nat -L -n -v | grep wg0
+```
+
+---
+
+## General Troubleshooting
 
 ### Issue: wlan0 has no IP after reboot
 
@@ -1189,31 +1205,6 @@ Device → Pi WiFi → VPN (tun0/wg0) → Ubuntu PC → Internet
 - Install mitmproxy for HTTPS interception (separate guide)
 - Install Wireshark for packet capture
 - Set up Frida for Android app analysis
-
----
-
-## Key Updates (December 2025)
-
-This guide has been updated based on real-world testing with modern Raspberry Pi OS to address common issues:
-
-1. **NetworkManager Support**: Added detection and configuration for systems using NetworkManager instead of dhcpcd
-2. **wlan0 Static IP Persistence**: Created systemd service (`wlan0-static-ip.service`) to ensure wlan0 IP survives reboots
-3. **NetworkManager WiFi Radio Fix**: Discovered that NetworkManager disables WiFi radio by default, preventing hostapd from working. Created `rfkill-unblock-wifi.service` to automatically enable both NetworkManager WiFi radio and unblock rfkill on every boot.
-4. **Pre-Reboot Verification**: Added critical verification steps before rebooting to catch configuration issues early
-5. **Enhanced Testing**: Added WiFi connection testing before reboot to ensure everything works
-6. **IP Forwarding Persistence Fix**: Discovered that `/etc/sysctl.conf` is not reliably applied on modern Raspberry Pi OS. Switched to systemd method using `/etc/sysctl.d/99-ip-forward.conf` which guarantees IP forwarding persists across reboots. Added critical verification checks throughout the guide.
-7. **Expanded Troubleshooting**: Comprehensive solutions for common issues including:
-   - wlan0 missing IP address
-   - NetworkManager WiFi radio disabled
-   - rfkill WiFi blocking
-   - DHCP packets on unconfigured interface
-   - IP forwarding disabled after reboot
-8. **Post-Reboot Checks**: Added verification steps after reboot to ensure setup persists, including IP forwarding check
-
-These improvements prevent the most common failure modes:
-- wlan0 doesn't get its static IP, causing DHCP to fail
-- NetworkManager re-blocks WiFi radio after rfkill unblock, causing hostapd to fail on reboot
-- IP forwarding not persisting after reboot due to `/etc/sysctl.conf` being ignored by systemd, causing "No Internet" on WiFi clients despite successful connection and DHCP lease
 
 ---
 
